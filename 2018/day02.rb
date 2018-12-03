@@ -37,7 +37,7 @@ class BoxScanner
   def off_by_one(ids)
     ids.each do |first|
       ids.each do |second|
-        if levenshtein(first, second) == 1
+        if only_off_by_one?(first, second)
           # assumes only one pair of box ids in the collection
           # have a one character difference in the same position
           return [first, second]
@@ -46,23 +46,13 @@ class BoxScanner
     end
   end
 
-  # is it cheating if you know the name of a solution
-  # but have to look up the implementation?
-  def levenshtein(first, second)
-    m, n = first.length, second.length
-    return m if n == 0
-    return n if m == 0
-  
-    d = Array.new(m+1) {Array.new(n+1)}
-    0.upto(m) { |i| d[i][0] = i }
-    0.upto(n) { |j| d[0][j] = j }
-  
-    1.upto(n) do |j|
-      1.upto(m) do |i|
-        d[i][j] = first[i-1] == second[j-1] ? d[i-1][j-1] : [d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+1,].min
-      end
+  def only_off_by_one?(first, second)
+    differences = 0
+    first.chars.each_with_index do |char, index|
+      differences += 1 if second[index] != char
+      return false if differences > 1
     end
-    d[m][n]
+    differences == 1
   end
 
   def common_characters(first, second)

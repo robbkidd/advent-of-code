@@ -40,7 +40,7 @@ require 'rspec'
 describe FrequencyStabilizer do
   context 'part1' do
     it 'example one' do
-      frequency_changes = %w(+1 -2 + 3 +1)
+      frequency_changes = %w(+1 -2 +3 +1)
       expect(subject.stabilize(frequency_changes)).to eq(3)
     end
 

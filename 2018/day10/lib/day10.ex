@@ -1,4 +1,12 @@
 defmodule Day10 do
+
+  def part1(input) do
+    coordinates = parse_input(input)
+    pretty_close = get_close(coordinates)
+    check_time_range = (pretty_close-20)..(pretty_close+20)
+    probably_this_second = smallest_area(coordinates, check_time_range)
+    #display_grid_at(coordinates, probably_this_second[:time])
+  end
   def parse_input(input) do
     input
     |> String.trim
@@ -47,13 +55,30 @@ defmodule Day10 do
       ...>   {5, 5},
       ...>   {8, 9}
       ...> ])
-      {1..8, 1..9}
+      %{area: 90, ranges: {1..8, 1..9}}
 
   """
-  def bounding_box(coordinates) do
-    {{min_x, _}, {max_x, _}} = Enum.min_max_by(coordinates, &elem(&1, 0))
-    {{_, min_y}, {_, max_y}} = Enum.min_max_by(coordinates, &elem(&1, 1))
-    {min_x..max_x, min_y..max_y}
+  def bounding_box(coordinates, time) do
+    locations = coordinates |> Enum.map(&new_location(&1, time))
+    {{min_x, _}, {max_x, _}} = Enum.min_max_by(locations, &elem(&1, 0))
+    {{_, min_y}, {_, max_y}} = Enum.min_max_by(locations, &elem(&1, 1))
+    %{area: abs(min_x - max_x) * abs(min_y - max_y),
+      ranges: {min_x..max_x, min_y..max_y},
+      time: time }
+  end
+
+  def smallest_area(coordinates, range) do
+    for second <- range do
+      coordinates
+      |> bounding_box(second)
+      |> Enum.min_by(fn box -> Map.get(box, :area) end)
+    end
+  end
+
+  def get_close(coordinates) do
+    point1 = Enum.random(coordinates)
+    point2 = Enum.random(coordinates)
+    trunc(10 / (point1[:delta_y] - point2[:delta_y]) - (point1[:y] - point2[:y]) / (point1[:delta_y] - point2[:delta_y]))
   end
 
   @doc """
@@ -120,7 +145,9 @@ defmodule Day10 do
   """
   def display_grid_at(coordinates, second) do
     current_locations = coordinates |> Enum.map(&new_location(&1, second))
-    {x_range, y_range} = bounding_box(current_locations)
+    box = bounding_box(current_locations, second)
+
+    {x_range, y_range} = box[:ranges]
     grid = new_grid({x_range, y_range}) |> fill(current_locations)
 
     for row <- y_range do

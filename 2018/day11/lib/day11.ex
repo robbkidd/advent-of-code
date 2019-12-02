@@ -43,9 +43,9 @@ defmodule Day11 do
       iex> Day11.a_grid(42) |> Day11.square_power({21,61})
       30
   """
-  def square_power(grid, {x, y}) do
-    for x <- x..(x+2),
-        y <- y..(y+2) do
+  def square_power(grid, {x, y}, dimension) do
+    for x <- x..(x+(dimension-1)),
+        y <- y..(y+(dimension-1)) do
           grid[{x,y}] || 0
         end
         |> Enum.reduce(fn power, total_power -> total_power + power end)
@@ -53,9 +53,39 @@ defmodule Day11 do
 
   def max_square_power(grid) do
     grid
-    |> Enum.map(fn {coord, _} -> {coord, square_power(grid, coord)} end)
-    |> Enum.max_by(fn {k,v} -> v end)
+    |> Enum.map(fn {coord, _} -> {coord, square_power(grid, coord, 3)} end)
+    |> Enum.max_by(fn {_,v} -> v end)
   end
 
+  # def turn_into_candidate_boxes(coord) do
+  #   for dimension <- 1..300, into: [] do
+  #     {coord, dimension}
+  #   end
+  #   |> Enum.reject(fn {{x,y}, dimension} -> (x+(dimension-1) > 300) || (y+(dimension-1) > 300) end)
+  #   |> Enum.map(fn {coord, dimension} -> {coord, Day11.square_power(grid, coord, dimension)} end)
+  # end
 
+  def box_compute(coord, grid) do
+    for dimension <- 10..30, into: [] do
+      {coord, dimension}
+    end
+    |> Enum.reject(fn {{x,y}, dimension} -> (x+(dimension-1) > 300) || (y+(dimension-1) > 300) end)
+    |> Task.async_stream(fn {coord, dimension} -> %{coord: coord,
+                                           dimension: dimension,
+                                           power: square_power(grid, coord, dimension)}
+                end)
+    |> Enum.map(fn {:ok, coord} -> coord end)
+    |> Enum.max_by(fn coord-> Map.get(coord, :power) end, fn -> nil end)
+  end
+
+  def max_square_max_power(grid) do
+    grid
+    |> Map.keys
+    #|> Enum.map(&(box_compute(&1, grid)))
+    |> Task.async_stream(fn coord -> box_compute(coord, grid) end)
+    |> Enum.map(fn {:ok, coord} -> coord end)
+    #|> Enum.max_by(fn coord-> Map.get(coord, :power) end)
+    #|> Enum.map(&Task.await/1)
+    #|> Enum.map(fn {coord, _} -> turn_into_candidate_boxes(coord) end)
+  end
 end

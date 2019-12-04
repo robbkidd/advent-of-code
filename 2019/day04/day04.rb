@@ -1,14 +1,23 @@
 class Day4
   def self.part1
-    (402328..864247).each_with_object([]) do |input, valid_passwords|
+    input_range.each_with_object([]) do |input, valid_passwords|
       valid_passwords << input if Password.new(input.to_s).valid?
     end.length
   end
 
   def self.part2
-    (402328..864247).each_with_object([]) do |input, valid_passwords|
+    input_range.each_with_object([]) do |input, valid_passwords|
       valid_passwords << input if Password.new(input.to_s).really_valid?
     end.length
+  end
+
+  def self.input_range
+    @input_range ||= Range.new(
+      *File.read('day04-input.txt')
+           .chomp
+           .split("-")
+           .map(&:to_i)
+    )
   end
 end
 

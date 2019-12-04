@@ -4,6 +4,12 @@ class Day4
       valid_passwords << input if Password.new(input.to_s).valid?
     end.length
   end
+
+  def self.part2
+    (402328..864247).each_with_object([]) do |input, valid_passwords|
+      valid_passwords << input if Password.new(input.to_s).really_valid?
+    end.length
+  end
 end
 
 class Password
@@ -12,10 +18,18 @@ class Password
   end
 
   def valid?
-    [ correct_length?,
-      digits_adjacent?,
+    return false unless correct_length?
+    [ digits_adjacent?,
       ever_increasing?,
     ].all?
+  end
+
+  def really_valid?
+    return false if !correct_length?
+    @password.chars.chunk_while do |current_digit, next_digit|
+      return false if current_digit > next_digit
+      current_digit == next_digit
+    end.to_a.any? { |chunk| chunk.length == 2 }
   end
 
   def correct_length?
@@ -39,13 +53,25 @@ require 'rspec'
 
 describe Password do
   context "validation" do
-    it "examples" do
+    it "part 1 examples" do
       expect(Password.new("111111")).to be_valid
       expect(Password.new("122345")).to be_valid
       expect(Password.new("111123")).to be_valid
 
       expect(Password.new("223450")).not_to be_valid
       expect(Password.new("123789")).not_to be_valid
+    end
+
+    it "part 2 examples" do
+      expect(Password.new("112233")).to be_really_valid
+      expect(Password.new("122345")).to be_really_valid
+      expect(Password.new("122345")).to be_really_valid
+
+      expect(Password.new("111123")).not_to be_really_valid
+      expect(Password.new("223450")).not_to be_really_valid
+      expect(Password.new("123789")).not_to be_really_valid
+      expect(Password.new("123444")).not_to be_really_valid
+      expect(Password.new("111111")).not_to be_really_valid
     end
 
     context "correct length" do

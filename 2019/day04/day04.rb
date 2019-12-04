@@ -1,14 +1,16 @@
 class Day4
   def self.part1
-    input_range.each_with_object([]) do |input, valid_passwords|
-      valid_passwords << input if Password.new(input.to_s).valid?
-    end.length
+    validate_input_with(:valid?).length
   end
 
   def self.part2
+    validate_input_with(:really_valid?).length
+  end
+
+  def self.validate_input_with(validator)
     input_range.each_with_object([]) do |input, valid_passwords|
-      valid_passwords << input if Password.new(input.to_s).really_valid?
-    end.length
+      valid_passwords << input if Password.new(input.to_s).send(validator)
+    end
   end
 
   def self.input_range

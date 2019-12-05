@@ -36,10 +36,26 @@ class Password
   end
 
   def really_valid?
-    return false if !correct_length?
+    # don't bother further evaluation of the password if it's the wrong length
+    return false unless correct_length?
+
+    # this chunk_while takes care of finding adjacent digits
+    # > "122444".chars.chunk_while do |current_digit, next_digit|
+    # *   current_digit == next_digit
+    # * end.to_a
+    # => [["1"], ["2", "2"], ["444"]]
     @password.chars.chunk_while do |current_digit, next_digit|
+
+      # early return false from the entire method if numbers decrease
       return false if current_digit > next_digit
+
+      # the boolean criteria by which elements are "chunked"
+      # put 'em all together if adjacent digits match
       current_digit == next_digit
+
+    # it's a special kind of awful to chain methods on a do/end block
+    # but this is the part that checks that any of the collections of
+    # adjacent digits are only a pair
     end.to_a.any? { |chunk| chunk.length == 2 }
   end
 

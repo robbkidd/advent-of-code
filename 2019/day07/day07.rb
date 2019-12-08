@@ -12,14 +12,16 @@ end
 
 class Intcode
   attr_reader :program, :debug
+  attr_accessor :memory, :input
 
-  def initialize(program: [99], debug: false)
+  def initialize(program: [99], input: [], debug: false)
     @program = program
+    @input = input
     @debug = debug
+    @memory = program.dup
   end
 
   def run
-    memory = program.dup
     debug_puts "             -- #{(0..memory.length-1).zip(memory).to_s}"
     pointer = 0
     loop do
@@ -30,7 +32,7 @@ class Intcode
       params = memory[pointer+1..pointer+op.arity]
       debug_puts "             -- #{op} : #{params.to_s}"
 
-      pointer_action, location = op.go(memory, params)
+      pointer_action, location = op.go(self, params)
       case pointer_action
       when :jump
         pointer = location
@@ -40,11 +42,11 @@ class Intcode
       debug_puts "             -- #{(0..memory.length-1).zip(memory).to_s}"
     end
   rescue Instruction::InvalidOpcode => e
-    binding.pry
+    debug ? binding.pry : raise(e)
   end
 
   def debug_puts(msg)
-    $stderr.puts msg if @debug
+    $stderr.puts msg if debug
   end
 end
 
@@ -66,14 +68,14 @@ class Instruction
   end
 
   INSTRUCTIONS = {
-    1 => Op.new("add", -> (memory, noun, verb, write_location) { memory[write_location] = noun + verb ; nil } ),
-    2 => Op.new("multiply", -> (memory, noun, verb, write_location) { memory[write_location] = noun * verb ; nil } ),
-    3 => Op.new("input", -> (memory, write_location) { puts "input: "; memory[write_location] = $stdin.gets.strip.to_i ; nil } ),
-    4 => Op.new("output", -> (memory, output) { puts output ; nil } ),
-    5 => Op.new("jump-if-true", -> (_memory, jump_flag, jump_to) { jump_flag == 0 ? nil : jump_to } ),
-    6 => Op.new("jump-if-false", -> (_memory, jump_flag, jump_to) { jump_flag == 0 ? jump_to : nil } ),
-    7 => Op.new("less-than", -> (memory, noun, verb, write_location) { memory[write_location] = noun < verb ? 1 : 0 ; nil } ),
-    8 => Op.new("equals", -> (memory, noun, verb, write_location) { memory[write_location] = noun == verb ? 1 : 0 ; nil } ),
+    1 => Op.new("add", -> (state, noun, verb, write_location) { state.memory[write_location] = noun + verb ; nil } ),
+    2 => Op.new("multiply", -> (state, noun, verb, write_location) { state.memory[write_location] = noun * verb ; nil } ),
+    3 => Op.new("input", -> (state, write_location) { state.memory[write_location] = state.input.pop.to_i ; nil } ),
+    4 => Op.new("output", -> (state, output) { puts output ; nil } ),
+    5 => Op.new("jump-if-true", -> (_state, jump_flag, jump_to) { jump_flag == 0 ? nil : jump_to } ),
+    6 => Op.new("jump-if-false", -> (_state, jump_flag, jump_to) { jump_flag == 0 ? jump_to : nil } ),
+    7 => Op.new("less-than", -> (state, noun, verb, write_location) { state.memory[write_location] = noun < verb ? 1 : 0 ; nil } ),
+    8 => Op.new("equals", -> (state, noun, verb, write_location) { state.memory[write_location] = noun == verb ? 1 : 0 ; nil } ),
     99 => Op.new("end", ->(){} ),
   }
   VALID_OPCODES = INSTRUCTIONS.keys
@@ -113,9 +115,9 @@ class Instruction
     @parsed_instruction ||= @raw_instruction.to_s.rjust(5, "0").chars
   end
 
-  def go(memory, params)
-    moded_params = apply_modes(memory, params)
-    result = @instruction.go.call(memory, *moded_params)
+  def go(state, params)
+    moded_params = apply_modes(state.memory, params)
+    result = @instruction.go.call(state, *moded_params)
     if result
       [:jump, result]
     else
@@ -162,11 +164,14 @@ describe Intcode do
   end
 
   context 'Day5 programs' do
-    it 'example one' do
-      computer = Intcode.new program: [3,0,4,0,99]
-      allow($stdin).to receive(:gets).and_return('42')
-      expect(computer.run).to eq([42, 0, 4, 0, 99])
-      expect{computer.run}.to output("input: \n42\n").to_stdout
+    context 'example one' do
+      let(:computer) { Intcode.new(program: [3,0,4,0,99], input: [42]) }
+      it 'has expected end state' do
+        expect(computer.run).to eq([42, 0, 4, 0, 99])
+      end
+      it 'outputs what was input' do
+        expect{computer.run}.to output("42\n").to_stdout
+      end
     end
 
     it 'example two' do
@@ -179,23 +184,23 @@ describe Intcode do
         context 'with a position mode program' do
           let(:computer) { Intcode.new program: [3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9] }
           it 'outputs 0 if input was zero' do
-            allow($stdin).to receive(:gets).and_return('0')
-            expect{computer.run}.to output("input: \n0\n").to_stdout
+            computer.input << 0
+            expect{computer.run}.to output("0\n").to_stdout
           end
           it 'outputs 1 if input was non-zero' do
-            allow($stdin).to receive(:gets).and_return('99')
-            expect{computer.run}.to output("input: \n1\n").to_stdout
+            computer.input << '99'
+            expect{computer.run}.to output("1\n").to_stdout
           end
         end
         context 'with an immediate mode program' do
           let(:computer) { Intcode.new program: [3,3,1105,-1,9,1101,0,0,12,4,12,99,1] }
           it 'outputs 0 if input was zero' do
-            allow($stdin).to receive(:gets).and_return('0')
-            expect{computer.run}.to output("input: \n0\n").to_stdout
+            computer.input << '0'
+            expect{computer.run}.to output("0\n").to_stdout
           end
           it 'outputs 1 if input was non-zero' do
-            allow($stdin).to receive(:gets).and_return('99')
-            expect{computer.run}.to output("input: \n1\n").to_stdout
+            computer.input << '99'
+            expect{computer.run}.to output("1\n").to_stdout
           end
         end
         context 'with a bigger program' do
@@ -206,8 +211,8 @@ describe Intcode do
             ["20", "1001"],
           ].each do |input, output|
             it "outputs #{output} given #{input}" do
-              allow($stdin).to receive(:gets).and_return(input)
-              expect{computer.run}.to output("input: \n#{output}\n").to_stdout
+              computer.input << input
+              expect{computer.run}.to output("#{output}\n").to_stdout
             end
           end
         end
@@ -217,23 +222,23 @@ describe Intcode do
         context 'with a position mode program' do
           let(:computer) { Intcode.new program: [3,9,8,9,10,9,4,9,99,-1,8] }
           it 'outputs 1 if true' do
-            allow($stdin).to receive(:gets).and_return('8')
-            expect{computer.run}.to output("input: \n1\n").to_stdout
+            computer.input << '8'
+            expect{computer.run}.to output("1\n").to_stdout
           end
           it 'outputs 0 if false' do
-            allow($stdin).to receive(:gets).and_return('4')
-            expect{computer.run}.to output("input: \n0\n").to_stdout
+            computer.input << '4'
+            expect{computer.run}.to output("0\n").to_stdout
           end
         end
         context 'with an immediate mode program' do
           let(:computer) { Intcode.new program: [3,3,1108,-1,8,3,4,3,99] }
           it 'outputs 1 if true' do
-            allow($stdin).to receive(:gets).and_return('8')
-            expect{computer.run}.to output("input: \n1\n").to_stdout
+            computer.input << '8'
+            expect{computer.run}.to output("1\n").to_stdout
           end
           it 'outputs 0 if false' do
-            allow($stdin).to receive(:gets).and_return('4')
-            expect{computer.run}.to output("input: \n0\n").to_stdout
+            computer.input << '4'
+            expect{computer.run}.to output("0\n").to_stdout
           end
         end
       end
@@ -241,23 +246,23 @@ describe Intcode do
         context 'with a position mode program' do
           let(:computer) { Intcode.new program: [3,9,7,9,10,9,4,9,99,-1,8] }
           it 'outputs 1 if true' do
-            allow($stdin).to receive(:gets).and_return('4')
-            expect{computer.run}.to output("input: \n1\n").to_stdout
+            computer.input << '4'
+            expect{computer.run}.to output("1\n").to_stdout
           end
           it 'outputs 0 if false' do
-            allow($stdin).to receive(:gets).and_return('9')
-            expect{computer.run}.to output("input: \n0\n").to_stdout
+            computer.input << '9'
+            expect{computer.run}.to output("0\n").to_stdout
           end
         end
         context 'with an immediate mode program' do
           let(:computer) { Intcode.new program: [3,3,1107,-1,8,3,4,3,99] }
           it 'outputs 1 if true' do
-            allow($stdin).to receive(:gets).and_return('4')
-            expect{computer.run}.to output("input: \n1\n").to_stdout
+            computer.input << '4'
+            expect{computer.run}.to output("1\n").to_stdout
           end
           it 'outputs 0 if false' do
-            allow($stdin).to receive(:gets).and_return('9')
-            expect{computer.run}.to output("input: \n0\n").to_stdout
+            computer.input << '9'
+            expect{computer.run}.to output("0\n").to_stdout
           end
         end
       end

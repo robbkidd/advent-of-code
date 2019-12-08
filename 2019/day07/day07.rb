@@ -1,17 +1,42 @@
 class Day7
 
   def self.part1
-    program = File.read('../day05/day05-input.txt').chomp.split(",").map(&:to_i)
-    Intcode.new(program: program).run
+    (0..4).to_a.permutation.map do |sequence|
+      output_signal = AmpCircuit.new(phase_sequence: sequence,
+                                     software: amp_control_software).run
+      [sequence, output_signal]
+    end.max_by {|sequence, output_signal| output_signal }
   end
 
   def self.part2
-    part1
+  end
+
+  def self.amp_control_software
+    File.read('day07-input.txt').chomp.split(",").map(&:to_i)
+  end
+end
+
+class AmpCircuit
+  attr_reader :amps
+  def initialize(phase_sequence:, software:)
+    @phase_sequence = phase_sequence
+    @software = software
+    @amps = @phase_sequence.map{ |phase| Intcode.new(program: @software, input: [phase]) }
+  end
+
+  def run(input=0)
+    amps.first.provide_input([input])
+    amps.each_with_index do |amp, index|
+      amp.run
+      next_amp = amps[index+1]
+      next_amp.provide_input(amp.output) if next_amp
+    end
+    amps.last.output.first
   end
 end
 
 class Intcode
-  attr_reader :program, :debug
+  attr_reader :program, :debug, :states
   attr_accessor :memory, :input, :output
 
   def initialize(program: [99], input: [], debug: false)
@@ -21,18 +46,19 @@ class Intcode
 
     @memory = program.dup
     @output = []
+    @states = []
   end
 
+  ComputerState = Struct.new(:memory, :pointer, :op, :params, :input)
+
   def run
-    debug_puts "             -- #{(0..memory.length-1).zip(memory).to_s}"
     pointer = 0
+    @states << ComputerState.new(memory.dup, pointer, nil, nil, input.dup)
     loop do
-      debug_puts "           ---- start pointer: #{pointer}"
       op = Instruction.new(memory[pointer])
       return memory if op.opcode == 99
 
       params = memory[pointer+1..pointer+op.arity]
-      debug_puts "             -- #{op} : #{params.to_s}"
 
       pointer_action, location = op.go(self, params)
       case pointer_action
@@ -41,14 +67,22 @@ class Intcode
       when :advance
         pointer += location
       end
-      debug_puts "             -- #{(0..memory.length-1).zip(memory).to_s}"
+      @states << ComputerState.new(memory.dup, pointer, op, params, input.dup)
     end
   rescue Instruction::InvalidOpcode => e
     debug ? binding.pry : raise(e)
   end
 
-  def debug_puts(msg)
-    $stderr.puts msg if debug
+  def eat_input
+    @input.shift
+  end
+
+  def provide_input(values)
+    if values.kind_of? Array
+      @input += values
+    else
+      @input << values
+    end
   end
 end
 
@@ -72,7 +106,7 @@ class Instruction
   INSTRUCTIONS = {
     1 => Op.new("add", -> (state, noun, verb, write_location) { state.memory[write_location] = noun + verb ; nil } ),
     2 => Op.new("multiply", -> (state, noun, verb, write_location) { state.memory[write_location] = noun * verb ; nil } ),
-    3 => Op.new("input", -> (state, write_location) { state.memory[write_location] = state.input.pop.to_i ; nil } ),
+    3 => Op.new("input", -> (state, write_location) { state.memory[write_location] = state.eat_input.to_i ; nil } ),
     4 => Op.new("output", -> (state, output) { state.output << output ; nil } ),
     5 => Op.new("jump-if-true", -> (_state, jump_flag, jump_to) { jump_flag == 0 ? nil : jump_to } ),
     6 => Op.new("jump-if-false", -> (_state, jump_flag, jump_to) { jump_flag == 0 ? jump_to : nil } ),
@@ -162,6 +196,30 @@ describe Intcode do
     it 'has some defaults' do
       expect(subject.program).to eq([99])
       expect(subject.debug).to be false
+    end
+  end
+
+  context 'Day7' do
+    it 'example one' do
+      amp_circuit = AmpCircuit.new(
+        phase_sequence: [4,3,2,1,0],
+        software: [3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0]
+      )
+      expect(amp_circuit.run(0)).to eq(43210)
+    end
+    it 'example two' do
+      amp_circuit = AmpCircuit.new(
+        phase_sequence: [0,1,2,3,4],
+        software: [3,23,3,24,1002,24,10,24,1002,23,-1,23,101,5,23,23,1,24,23,23,4,23,99,0,0]
+      )
+      expect(amp_circuit.run(0)).to eq(54321)
+    end
+    it 'example three' do
+      amp_circuit = AmpCircuit.new(
+        phase_sequence: [1,0,4,3,2],
+        software: [3,31,3,32,1002,32,10,32,1001,31,-2,31,1007,31,0,33,1002,33,7,33,1,33,31,31,1,32,31,31,4,31,99,0,0,0]
+      )
+      expect(amp_circuit.run(0)).to eq(65210)
     end
   end
 

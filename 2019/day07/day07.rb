@@ -12,13 +12,15 @@ end
 
 class Intcode
   attr_reader :program, :debug
-  attr_accessor :memory, :input
+  attr_accessor :memory, :input, :output
 
   def initialize(program: [99], input: [], debug: false)
     @program = program
     @input = input
     @debug = debug
+
     @memory = program.dup
+    @output = []
   end
 
   def run
@@ -71,7 +73,7 @@ class Instruction
     1 => Op.new("add", -> (state, noun, verb, write_location) { state.memory[write_location] = noun + verb ; nil } ),
     2 => Op.new("multiply", -> (state, noun, verb, write_location) { state.memory[write_location] = noun * verb ; nil } ),
     3 => Op.new("input", -> (state, write_location) { state.memory[write_location] = state.input.pop.to_i ; nil } ),
-    4 => Op.new("output", -> (state, output) { puts output ; nil } ),
+    4 => Op.new("output", -> (state, output) { state.output << output ; nil } ),
     5 => Op.new("jump-if-true", -> (_state, jump_flag, jump_to) { jump_flag == 0 ? nil : jump_to } ),
     6 => Op.new("jump-if-false", -> (_state, jump_flag, jump_to) { jump_flag == 0 ? jump_to : nil } ),
     7 => Op.new("less-than", -> (state, noun, verb, write_location) { state.memory[write_location] = noun < verb ? 1 : 0 ; nil } ),
@@ -170,7 +172,8 @@ describe Intcode do
         expect(computer.run).to eq([42, 0, 4, 0, 99])
       end
       it 'outputs what was input' do
-        expect{computer.run}.to output("42\n").to_stdout
+        computer.run
+        expect(computer.output).to eq([42])
       end
     end
 
@@ -185,34 +188,39 @@ describe Intcode do
           let(:computer) { Intcode.new program: [3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9] }
           it 'outputs 0 if input was zero' do
             computer.input << 0
-            expect{computer.run}.to output("0\n").to_stdout
+            computer.run
+            expect(computer.output).to eq([0])
           end
           it 'outputs 1 if input was non-zero' do
             computer.input << '99'
-            expect{computer.run}.to output("1\n").to_stdout
+            computer.run
+            expect(computer.output).to eq([1])
           end
         end
         context 'with an immediate mode program' do
           let(:computer) { Intcode.new program: [3,3,1105,-1,9,1101,0,0,12,4,12,99,1] }
           it 'outputs 0 if input was zero' do
             computer.input << '0'
-            expect{computer.run}.to output("0\n").to_stdout
+            computer.run
+            expect(computer.output).to eq([0])
           end
           it 'outputs 1 if input was non-zero' do
             computer.input << '99'
-            expect{computer.run}.to output("1\n").to_stdout
+            computer.run
+            expect(computer.output).to eq([1])
           end
         end
         context 'with a bigger program' do
           let(:computer) { Intcode.new program: [3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99] }
 
-          [ ["2", "999"],
-            ["8", "1000"],
-            ["20", "1001"],
+          [ ["2", 999],
+            ["8", 1000],
+            ["20", 1001],
           ].each do |input, output|
             it "outputs #{output} given #{input}" do
               computer.input << input
-              expect{computer.run}.to output("#{output}\n").to_stdout
+              computer.run
+              expect(computer.output).to eq([output])
             end
           end
         end
@@ -223,22 +231,26 @@ describe Intcode do
           let(:computer) { Intcode.new program: [3,9,8,9,10,9,4,9,99,-1,8] }
           it 'outputs 1 if true' do
             computer.input << '8'
-            expect{computer.run}.to output("1\n").to_stdout
+            computer.run
+            expect(computer.output).to eq([1])
           end
           it 'outputs 0 if false' do
             computer.input << '4'
-            expect{computer.run}.to output("0\n").to_stdout
+            computer.run
+            expect(computer.output).to eq([0])
           end
         end
         context 'with an immediate mode program' do
           let(:computer) { Intcode.new program: [3,3,1108,-1,8,3,4,3,99] }
           it 'outputs 1 if true' do
             computer.input << '8'
-            expect{computer.run}.to output("1\n").to_stdout
+            computer.run
+            expect(computer.output).to eq([1])
           end
           it 'outputs 0 if false' do
             computer.input << '4'
-            expect{computer.run}.to output("0\n").to_stdout
+            computer.run
+            expect(computer.output).to eq([0])
           end
         end
       end
@@ -247,22 +259,26 @@ describe Intcode do
           let(:computer) { Intcode.new program: [3,9,7,9,10,9,4,9,99,-1,8] }
           it 'outputs 1 if true' do
             computer.input << '4'
-            expect{computer.run}.to output("1\n").to_stdout
+            computer.run
+            expect(computer.output).to eq([1])
           end
           it 'outputs 0 if false' do
             computer.input << '9'
-            expect{computer.run}.to output("0\n").to_stdout
+            computer.run
+            expect(computer.output).to eq([0])
           end
         end
         context 'with an immediate mode program' do
           let(:computer) { Intcode.new program: [3,3,1107,-1,8,3,4,3,99] }
           it 'outputs 1 if true' do
             computer.input << '4'
-            expect{computer.run}.to output("1\n").to_stdout
+            computer.run
+            expect(computer.output).to eq([1])
           end
           it 'outputs 0 if false' do
             computer.input << '9'
-            expect{computer.run}.to output("0\n").to_stdout
+            computer.run
+            expect(computer.output).to eq([0])
           end
         end
       end

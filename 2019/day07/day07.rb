@@ -50,32 +50,33 @@ class AmpCircuit
 
   def run_with_feedback(input=0)
     amps.first.receive_input(input)
-    threads = []
     amps.each_with_index do |amp, index|
-      t = Thread.new { debug_puts "Starting #{amp.name}"; amp.run }
+      t = Thread.new { debug_puts "🧵  Starting #{amp.name}"; amp.run }
       t[:amp] = amp
       threads << t.run
     end
-    watchers = []
+
     last_out = nil
-    threads.each do |t|
-      nt = Thread.new {
+    leads = threads.map do |t|
+      Thread.new do
+        next_amp_idx = (t[:amp].idx + 1) % threads.length
         while not t[:amp].halted?
           while t[:amp].output.empty?
             sleep 0.001
-            # puts "Waiting on #{t[:amp].name} for output"
           end
-          debug_puts "#{t[:amp].idx} -> #{((t[:amp].idx + 1) % 5)}"
-          next_amp = threads[(t[:amp].idx + 1) % 5][:amp]
-          debug_puts "SENT INPUT #{t[:amp].output} FOR #{next_amp.name} FROM #{t[:amp].name}"
+          next_amp = threads[next_amp_idx][:amp]
           last_out = t[:amp].output.shift
-          next_amp.receive_input(last_out)
+          if not next_amp.halted?
+            debug_puts "🧵  {lead #{t[:amp].name} -> #{next_amp.name}} #{t[:amp].idx} -- #{last_out} -> #{next_amp_idx}"
+            next_amp.receive_input(last_out)
+          else
+            debug_puts "🧵  {lead #{t[:amp].idx} -> 🚀 } #{t[:amp].idx} -- #{last_out} -> 🚀"
+          end
         end
-      }
-      watchers << nt
+      end
     end
 
-    [watchers].flatten.map(&:join)
+    leads.map(&:join)
     last_out
   end
 
@@ -100,12 +101,13 @@ class Intcode
     @memory = program.dup
     @output = []
     @states = [State.new(:initializing, memory.dup, 0, nil, nil, input.dup, output.dup)]
-    debug_puts "[#{name}] INITIALIZED WITH #{input.to_s}"
+    debug_puts "[#{name}] 🐣  #{input.to_s}"
   end
 
   def run
     pointer = 0
     @states << State.new(:running, memory.dup, pointer, nil, nil, input.dup, output.dup)
+    debug_puts "[#{name}] 🟢"
     loop do
       op = Instruction.new(memory[pointer])
 
@@ -119,6 +121,7 @@ class Intcode
         pointer += location
       when :halt
         @states << State.new(:halted, memory.dup, pointer, op, params, input.dup, output.dup)
+        debug_puts "[#{name}] 🛑"
         return memory
       end
       @states << State.new(:running, memory.dup, pointer, op, params, input.dup, output.dup)
@@ -135,7 +138,7 @@ class Intcode
     status == :halted
   end
 
-  def eat_input
+  def read_input
     sleep_iter = 0
     while @input.first.nil?
       sleep_iter += 1
@@ -143,13 +146,13 @@ class Intcode
       sleep 0.01
     end
     input = @input.shift
-    debug_puts "[#{@name}] ATE #{input}"
-    raise "HO HO oh no!" if input.nil?
+    debug_puts "[#{@name}] 👁  #{input}"
+    raise "🎅 HO HO oh no! 💥" if input.nil?
     input
   end
 
   def receive_input(values)
-    debug_puts "[#{@name}] RECEIVED #{values.inspect}"
+    debug_puts "[#{@name}] 📨  #{values.inspect}"
     if values.kind_of? Array
       values.each {|v| @input << v }
     else
@@ -158,7 +161,7 @@ class Intcode
   end
 
   def send_output(value)
-    debug_puts "[#{@name}] FED #{value}"
+    debug_puts "[#{@name}] 📬  #{value}"
     @output << value
   end
 
@@ -168,7 +171,7 @@ class Intcode
 end
 
 class Instruction
-  attr_reader :opcode, :parameter_modes, :arity
+  attr_reader :arity
 
   class InvalidOpcode < StandardError; end
 
@@ -187,7 +190,7 @@ class Instruction
   INSTRUCTIONS = {
     1 => Op.new("add", -> (state, noun, verb, write_location) { state.memory[write_location] = noun + verb ; :advance } ),
     2 => Op.new("multiply", -> (state, noun, verb, write_location) { state.memory[write_location] = noun * verb ; :advance } ),
-    3 => Op.new("input", -> (state, write_location) { state.memory[write_location] = state.eat_input.to_i ; :advance } ),
+    3 => Op.new("input", -> (state, write_location) { state.memory[write_location] = state.read_input.to_i ; :advance } ),
     4 => Op.new("output", -> (state, output) { state.send_output(output) ; :advance } ),
     5 => Op.new("jump-if-true", -> (_state, jump_flag, jump_to) { jump_flag == 0 ? :advance : jump_to } ),
     6 => Op.new("jump-if-false", -> (_state, jump_flag, jump_to) { jump_flag == 0 ? jump_to : :advance } ),
@@ -243,7 +246,7 @@ class Instruction
     else
       [:jump, result]
     end
-  rescue TypeError => e
+  rescue TypeError
     binding.pry
   end
 

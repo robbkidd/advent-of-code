@@ -7,6 +7,9 @@ class Day9
   end
 
   def self.part2
+    boost_test = Intcode.new(program: load_boost_program, input: [2], debug: true)
+    boost_test.run
+    boost_test.output
   end
 
   def self.load_boost_program

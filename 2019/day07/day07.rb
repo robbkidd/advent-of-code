@@ -17,54 +17,88 @@ class Day7
 end
 
 class AmpCircuit
-  attr_reader :amps
-  def initialize(phase_sequence:, software:)
-    @phase_sequence = phase_sequence
+  attr_reader :amps, :threads, :debug
+  def initialize(phase_sequence:, software:, debug: false)
+    @debug = debug
+    @threads = []
+
     @software = software
-    @amps = @phase_sequence.map{ |phase| Intcode.new(program: @software, input: [phase]) }
+    @phase_sequence = phase_sequence
+    @amps = []
+    @phase_sequence.each_with_index do |phase, id|
+      @amps << Intcode.new(idx: id, program: @software, input: [phase], debug: @debug)
+    end
   end
 
   def run(input=0)
-    amps.first.provide_input([input])
+    amps.first.receive_input(input)
     amps.each_with_index do |amp, index|
       amp.run
+      debug_puts amp.name + ": " + amp.output.to_s
       next_amp = amps[index+1]
-      next_amp.provide_input(amp.output) if next_amp
+      next_amp.receive_input(amp.output) if next_amp
     end
-    amps.last.output.first
+    amps.last.output.last
   end
 
   def run_with_feedback(input=0)
-    amps.first.provide_input([input])
-    amp_loop = amps.cycle
-    loop do
-      return amps if amps.map(&:halted?).all?
-      amp = amp_loop.next
-      amp.run
-      amp_loop.peek.provide_input(amp.output)
+    amps.first.receive_input(input)
+    threads = []
+    amps.each_with_index do |amp, index|
+      t = Thread.new { debug_puts "Starting #{amp.name}"; amp.run }
+      t[:amp] = amp
+      threads << t.run
     end
+    watchers = []
+    last_out = nil
+    threads.each do |t|
+      nt = Thread.new {
+        while not t[:amp].halted?
+          while t[:amp].output.empty?
+            sleep 0.001
+            # puts "Waiting on #{t[:amp].name} for output"
+          end
+          debug_puts "#{t[:amp].idx} -> #{((t[:amp].idx + 1) % 5)}"
+          next_amp = threads[(t[:amp].idx + 1) % 5][:amp]
+          debug_puts "SENT INPUT #{t[:amp].output} FOR #{next_amp.name} FROM #{t[:amp].name}"
+          last_out = t[:amp].output.shift
+          next_amp.receive_input(last_out)
+        end
+      }
+      watchers << nt
+    end
+
+    [watchers].flatten.map(&:join)
+    last_out
+  end
+
+  def debug_puts(msg)
+    puts msg if debug
   end
 end
 
 class Intcode
-  attr_reader :program, :debug, :states
+  attr_reader :name, :idx, :program, :debug, :states
   attr_accessor :memory, :input, :output
 
-  State = Struct.new(:status, :memory, :pointer, :op, :params, :input)
+  State = Struct.new(:status, :memory, :pointer, :op, :params, :input, :output)
 
-  def initialize(program: [99], input: [], debug: false)
+  def initialize(idx: 0, program: [99], input: [], debug: false)
+    @idx = idx
+    @name = ('A'..'Z').to_a[idx]
     @program = program
     @input = input
     @debug = debug
 
     @memory = program.dup
     @output = []
-    @states = [State.new(:initializing, memory.dup, 0, nil, nil, input.dup)]
+    @states = [State.new(:initializing, memory.dup, 0, nil, nil, input.dup, output.dup)]
+    debug_puts "[#{name}] INITIALIZED WITH #{input.to_s}"
   end
 
   def run
     pointer = 0
-    @states << State.new(:running, memory.dup, pointer, nil, nil, input.dup)
+    @states << State.new(:running, memory.dup, pointer, nil, nil, input.dup, output.dup)
     loop do
       op = Instruction.new(memory[pointer])
 
@@ -77,10 +111,10 @@ class Intcode
       when :advance
         pointer += location
       when :halt
-        @states << State.new(:halted, memory.dup, pointer, op, params, input.dup)
+        @states << State.new(:halted, memory.dup, pointer, op, params, input.dup, output.dup)
         return memory
       end
-      @states << State.new(:running, memory.dup, pointer, op, params, input.dup)
+      @states << State.new(:running, memory.dup, pointer, op, params, input.dup, output.dup)
     end
   rescue Instruction::InvalidOpcode => e
     debug ? binding.pry : raise(e)
@@ -95,15 +129,34 @@ class Intcode
   end
 
   def eat_input
-    @input.shift
+    sleep_iter = 0
+    while @input.first.nil?
+      sleep_iter += 1
+      debug_puts "[#{@name}] is waiting for input ..." if sleep_iter % 1000 == 0
+      sleep 0.01
+    end
+    input = @input.shift
+    debug_puts "[#{@name}] ATE #{input}"
+    raise "HO HO oh no!" if input.nil?
+    input
   end
 
-  def provide_input(values)
+  def receive_input(values)
+    debug_puts "[#{@name}] RECEIVED #{values.inspect}"
     if values.kind_of? Array
-      @input += values
+      values.each {|v| @input << v }
     else
       @input << values
     end
+  end
+
+  def send_output(value)
+    debug_puts "[#{@name}] FED #{value}"
+    @output << value
+  end
+
+  def debug_puts(msg)
+    puts msg if debug
   end
 end
 
@@ -128,7 +181,7 @@ class Instruction
     1 => Op.new("add", -> (state, noun, verb, write_location) { state.memory[write_location] = noun + verb ; :advance } ),
     2 => Op.new("multiply", -> (state, noun, verb, write_location) { state.memory[write_location] = noun * verb ; :advance } ),
     3 => Op.new("input", -> (state, write_location) { state.memory[write_location] = state.eat_input.to_i ; :advance } ),
-    4 => Op.new("output", -> (state, output) { state.output << output ; :advance } ),
+    4 => Op.new("output", -> (state, output) { state.send_output(output) ; :advance } ),
     5 => Op.new("jump-if-true", -> (_state, jump_flag, jump_to) { jump_flag == 0 ? :advance : jump_to } ),
     6 => Op.new("jump-if-false", -> (_state, jump_flag, jump_to) { jump_flag == 0 ? jump_to : :advance } ),
     7 => Op.new("less-than", -> (state, noun, verb, write_location) { state.memory[write_location] = noun < verb ? 1 : 0 ; :advance } ),
@@ -250,17 +303,11 @@ describe Intcode do
 
     context 'part 2' do
       it 'example one' do
-        amp_circuit = AmpCircuit.new(
-          phase_sequence: [9,8,7,6,5],
-          software: [3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5]
-        )
+        amp_circuit = AmpCircuit.new(phase_sequence: [9,8,7,6,5],software: [3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5])
         expect(amp_circuit.run_with_feedback(0)).to eq(139629729)
       end
       it 'example two' do
-        amp_circuit = AmpCircuit.new(
-          phase_sequence: [9,7,8,5,6],
-          software: [3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10]
-        )
+        amp_circuit = AmpCircuit.new(phase_sequence: [9,7,8,5,6],software: [3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10])
         expect(amp_circuit.run_with_feedback(0)).to eq(18216)
       end
     end
@@ -288,12 +335,12 @@ describe Intcode do
         context 'with a position mode program' do
           let(:computer) { Intcode.new program: [3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9] }
           it 'outputs 0 if input was zero' do
-            computer.input << 0
+            computer.receive_input 0
             computer.run
             expect(computer.output).to eq([0])
           end
           it 'outputs 1 if input was non-zero' do
-            computer.input << '99'
+            computer.receive_input '99'
             computer.run
             expect(computer.output).to eq([1])
           end
@@ -301,12 +348,12 @@ describe Intcode do
         context 'with an immediate mode program' do
           let(:computer) { Intcode.new program: [3,3,1105,-1,9,1101,0,0,12,4,12,99,1] }
           it 'outputs 0 if input was zero' do
-            computer.input << '0'
+            computer.receive_input '0'
             computer.run
             expect(computer.output).to eq([0])
           end
           it 'outputs 1 if input was non-zero' do
-            computer.input << '99'
+            computer.receive_input '99'
             computer.run
             expect(computer.output).to eq([1])
           end
@@ -319,7 +366,7 @@ describe Intcode do
             ["20", 1001],
           ].each do |input, output|
             it "outputs #{output} given #{input}" do
-              computer.input << input
+              computer.receive_input input
               computer.run
               expect(computer.output).to eq([output])
             end
@@ -331,12 +378,12 @@ describe Intcode do
         context 'with a position mode program' do
           let(:computer) { Intcode.new program: [3,9,8,9,10,9,4,9,99,-1,8] }
           it 'outputs 1 if true' do
-            computer.input << '8'
+            computer.receive_input '8'
             computer.run
             expect(computer.output).to eq([1])
           end
           it 'outputs 0 if false' do
-            computer.input << '4'
+            computer.receive_input '4'
             computer.run
             expect(computer.output).to eq([0])
           end
@@ -344,12 +391,12 @@ describe Intcode do
         context 'with an immediate mode program' do
           let(:computer) { Intcode.new program: [3,3,1108,-1,8,3,4,3,99] }
           it 'outputs 1 if true' do
-            computer.input << '8'
+            computer.receive_input '8'
             computer.run
             expect(computer.output).to eq([1])
           end
           it 'outputs 0 if false' do
-            computer.input << '4'
+            computer.receive_input '4'
             computer.run
             expect(computer.output).to eq([0])
           end
@@ -359,12 +406,12 @@ describe Intcode do
         context 'with a position mode program' do
           let(:computer) { Intcode.new program: [3,9,7,9,10,9,4,9,99,-1,8] }
           it 'outputs 1 if true' do
-            computer.input << '4'
+            computer.receive_input '4'
             computer.run
             expect(computer.output).to eq([1])
           end
           it 'outputs 0 if false' do
-            computer.input << '9'
+            computer.receive_input  '9'
             computer.run
             expect(computer.output).to eq([0])
           end
@@ -372,12 +419,12 @@ describe Intcode do
         context 'with an immediate mode program' do
           let(:computer) { Intcode.new program: [3,3,1107,-1,8,3,4,3,99] }
           it 'outputs 1 if true' do
-            computer.input << '4'
+            computer.receive_input '4'
             computer.run
             expect(computer.output).to eq([1])
           end
           it 'outputs 0 if false' do
-            computer.input << '9'
+            computer.receive_input '9'
             computer.run
             expect(computer.output).to eq([0])
           end

@@ -9,6 +9,13 @@ class Day7
   end
 
   def self.part2
+    (5..9).to_a.permutation.map do |sequence|
+      output_signal = AmpCircuit.new(phase_sequence: sequence,
+                                     software: amp_control_software).run_with_feedback
+      #puts "#{sequence}: #{output_signal}"
+      print "."
+      [sequence, output_signal]
+    end.max_by {|sequence, output_signal| output_signal }
   end
 
   def self.amp_control_software

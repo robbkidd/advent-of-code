@@ -215,6 +215,7 @@ class Instruction
     end
     @instruction = INSTRUCTIONS[opcode]
     @arity = @instruction.arity
+    @orig_params = []
     @moded_params = []
   end
 
@@ -234,7 +235,7 @@ class Instruction
                                            .zip(@instruction.location_params_mask)
                                            .map do |mode_digit, location_param|
                                              if location_param
-                                               :location
+                                               (PARAMETER_MODE_MAP[mode_digit].to_s + "_location").to_sym
                                              else
                                                PARAMETER_MODE_MAP[mode_digit]
                                              end
@@ -246,8 +247,9 @@ class Instruction
   end
 
   def execute(state, params)
-    moded_params = apply_modes(state, params)
-    result = @instruction.go.call(state, *moded_params)
+    @orig_params = params
+    @moded_params = apply_modes(state, params)
+    result = @instruction.go.call(state, *@moded_params)
     case result
     when :advance
       [:advance, arity + 1]
@@ -265,9 +267,13 @@ class Instruction
       case mode
       when :position
         state.memory.fetch(param, 0)
+      when :position_location
+        param
       when :relative
         state.memory.fetch(param + state.relative_base, 0)
-      when :immediate, :location
+      when :relative_location
+        param + state.relative_base
+      when :immediate
         param
       else
         raise "What kind of weird mode are you in?"
@@ -280,6 +286,8 @@ class Instruction
       opcode: opcode,
       name: @instruction.name,
       parameter_modes: parameter_modes,
+      orig_params: @orig_params,
+      moded_params: @moded_params,
     }
   end
 

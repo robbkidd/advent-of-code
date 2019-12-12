@@ -7,42 +7,23 @@ defmodule Day10 do
     asteroids = get_day_input()
                 |> find_asteroids()
     asteroids
-    |> Enum.map(&num_asteroids_visible_from(asteroids,&1))
+    |> Enum.map(&count_asteroids_visible_from(asteroids,&1))
     |> Enum.max()
   end
 
-  def num_asteroids_visible_from(asteroids, asteroid) do
+  def count_asteroids_visible_from(asteroids, asteroid) do
     asteroids
-    |> Enum.reject(fn (other) -> other == asteroid end)
-    |> Enum.group_by(&vector(asteroid, &1))
-    |> Enum.count(fn {_vector, other_asteroids} -> Enum.count(other_asteroids) > 0 end)
+    |> MapSet.delete(asteroid)
+    |> Enum.map(&polar_coordinates_to(asteroid, &1))
+    |> Enum.uniq_by(fn {_r, theta} -> theta end)
+    |> length()
   end
 
-  @spec vector(%{x: number, y: number}, %{x: number, y: number}) :: %{
-          delta_x: float,
-          delta_y: float
-        }
-  def vector(a, b) when a != b do
-    [diff_x, diff_y] = diff(a, b)
-    diff_gcd = Integer.gcd(diff_x, diff_y)
-    %{ delta_x: (diff_x / diff_gcd),
-       delta_y: (diff_y / diff_gcd)
-     }
-  end
-
-  def vector(a, b) when a == b do
-    %{ delta_x: 0, delta_y: 0 }
-  end
-
-  @spec distance(%{x: number, y: number}, %{x: number, y: number}) :: number
-  def distance(a, b) do
-    diff(a, b)
-    |> (fn [dx, dy] -> abs(dx) + abs(dy) end).()
-  end
-
-  @spec diff(%{x: number, y: number}, %{x: number, y: number}) :: [number, ...]
-  def diff(a, b) do
-    [(a.x - b.x), (a.y - b.y)]
+  def polar_coordinates_to(reference, other) do
+    {diff_x, diff_y} = {(reference.x - other.x), (reference.y - other.y)}
+    r = :math.sqrt(:math.pow(diff_x, 2) + :math.pow(diff_y, 2))
+    theta = :math.atan2(diff_y, diff_x)
+    {r, theta}
   end
 
   def find_asteroids(input) do
@@ -50,6 +31,7 @@ defmodule Day10 do
     |> String.split("\n")
     |> Enum.with_index()
     |> Enum.flat_map(fn {row, y} -> row_asteroid_coords(row, y) end)
+    |> MapSet.new
   end
 
   def row_asteroid_coords(row, y) do

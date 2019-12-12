@@ -7,8 +7,15 @@ defmodule Day10 do
     asteroids = get_day_input()
                 |> find_asteroids()
     asteroids
-    |> Enum.map(&count_asteroids_visible_from(asteroids,&1))
-    |> Enum.max()
+    |> best_station_location_in()
+  end
+
+  def best_station_location_in(asteroids) do
+    asteroids
+    |> Enum.map(fn asteroid ->
+      { asteroid, count_asteroids_visible_from(asteroids, asteroid) }
+    end)
+    |> Enum.max_by(fn {_asteroid, visible_asteroids} -> visible_asteroids end)
   end
 
   def count_asteroids_visible_from(asteroids, asteroid) do

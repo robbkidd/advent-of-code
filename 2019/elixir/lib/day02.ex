@@ -39,7 +39,8 @@ defmodule Day02 do
     load_gravity_assist_program()
     |> replace_first_sentence(noun, verb)
     |> Intcode.run()
-    |> hd()
+    |> Map.get(:addresses)
+    |> Map.get(0)
   end
 
   def replace_first_sentence(program, noun, verb) do

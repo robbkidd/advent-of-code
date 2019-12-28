@@ -1,4 +1,6 @@
 defmodule Intcode do
+  defstruct addresses: {}, position: 0, state: :new
+
   @moduledoc """
   Documentation for the Intcode computer.
   """
@@ -8,64 +10,54 @@ defmodule Intcode do
 
   ## Examples
 
-      iex> Intcode.run([99])
-      [99]
-      iex> Intcode.run([1,0,0,0,99])
-      [2,0,0,0,99]
-      iex> Intcode.run([1,1,1,4,99,5,6,0,99])
-      [30,1,1,4,2,5,6,0,99]
+      iex> %Intcode{state: :halt} = Intcode.run([99])
+      iex> Intcode.run([1,0,0,0,99]) |> Map.get(:addresses) |> Map.get(0)
+      2
+      iex> Intcode.run([1,1,1,4,99,5,6,0,99]) |> Map.get(:addresses) |> Map.get(0)
+      30
 
   """
-  def run(program, position \\ 0)
+  def run(program) when is_list(program) do
+    addresses = program
+                |> Enum.with_index()
+                |> Enum.into(Map.new, fn {n, i} -> {i, n} end)
 
-  def run(program, :halt), do: program
+    %__MODULE__{addresses: addresses, state: :running}
+    |> run()
+  end
 
-  def run(program, position) do
-    {next_state, next_position} =
-      program
-      |> Enum.at(position)
-      |> do_op(program, position)
+  def run(%__MODULE__{state: :halt}=intcode), do: intcode
 
-    run(next_state, next_position)
+  def run(intcode) do
+    opcode = Map.fetch!(intcode.addresses, intcode.position)
+
+    do_op(opcode, intcode)
+    |> run()
    end
 
-  def do_op(99, program, _position) do
-    {program, :halt}
+  def do_op(99, intcode) do
+    %__MODULE__{intcode | state: :halt}
   end
 
-  @doc """
-  opcode 1 - Add
+  def do_op(1, intcode) do
+    [noun_index, verb_index, write_to] = Enum.map((intcode.position+1..intcode.position+3),
+                                                  fn i -> Map.fetch!(intcode.addresses, i) end)
 
-    ## Examples
-
-      iex> Intcode.do_op(1, [1,0,0,0,99], 0)
-      {[2,0,0,0,99], 4}
-
-  """
-  def do_op(1, program, position) do
-    [noun_index, verb_index, write_to] = Enum.slice(program, position+1..position+3)
-    noun = Enum.at(program, noun_index)
-    verb = Enum.at(program, verb_index)
-    new_program_state = List.replace_at(program, write_to, noun + verb)
-    {new_program_state, position + 4}
+    noun = Map.fetch!(intcode.addresses, noun_index)
+    verb = Map.fetch!(intcode.addresses, verb_index)
+    new_addresses = Map.put(intcode.addresses, write_to, noun + verb)
+    new_position = intcode.position + 4
+    %__MODULE__{intcode | addresses: new_addresses, position: new_position}
   end
 
-  @doc """
-  opcode 1 - Multiply
+  def do_op(2, intcode) do
+    [noun_index, verb_index, write_to] = Enum.map((intcode.position+1..intcode.position+3),
+                                                  fn i -> Map.fetch!(intcode.addresses, i) end)
 
-    ## Examples
-
-      iex> Intcode.do_op(2, [2,3,0,3,99], 0)
-      {[2,3,0,6,99], 4}
-      iex> Intcode.do_op(2, [2,4,4,5,99,0], 0)
-      {[2,4,4,5,99,9801], 4}
-
-  """
-  def do_op(2, program, position) do
-    [noun_index, verb_index, write_to] = Enum.slice(program, position+1..position+3)
-    noun = Enum.at(program, noun_index)
-    verb = Enum.at(program, verb_index)
-    new_program_state = List.replace_at(program, write_to, noun * verb)
-    {new_program_state, position + 4}
+    noun = Map.fetch!(intcode.addresses, noun_index)
+    verb = Map.fetch!(intcode.addresses, verb_index)
+    new_addresses = Map.put(intcode.addresses, write_to, noun * verb)
+    new_position = intcode.position + 4
+    %__MODULE__{intcode | addresses: new_addresses, position: new_position}
   end
 end

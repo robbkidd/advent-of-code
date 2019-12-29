@@ -1,9 +1,17 @@
 defmodule Intcode do
-  defstruct addresses: {}, position: 0, state: :new
+  defstruct addresses: {}, position: 0, state: :new, input: [], output: ""
 
   @moduledoc """
   Documentation for the Intcode computer.
   """
+
+  def new(program, input \\ []) when is_list(program) do
+    addresses = program
+                |> Enum.with_index()
+                |> Enum.into(Map.new, fn {n, i} -> {i, n} end)
+
+    %__MODULE__{addresses: addresses, state: :running, input: input}
+  end
 
   @doc """
   Hello world.
@@ -15,14 +23,14 @@ defmodule Intcode do
       2
       iex> Intcode.run([1,1,1,4,99,5,6,0,99]) |> Map.get(:addresses) |> Map.get(0)
       30
+      iex> Intcode.new([3,0,4,0,99], [42]) |> Intcode.run() |> Map.get(:addresses) |> Map.get(0)
+      42
+      iex> Intcode.new([3,0,4,0,99], [42]) |> Intcode.run() |> Map.get(:output) |> String.trim()
+      "42"
 
   """
   def run(program) when is_list(program) do
-    addresses = program
-                |> Enum.with_index()
-                |> Enum.into(Map.new, fn {n, i} -> {i, n} end)
-
-    %__MODULE__{addresses: addresses, state: :running}
+    new(program)
     |> run()
   end
 
@@ -59,5 +67,21 @@ defmodule Intcode do
     new_addresses = Map.put(intcode.addresses, write_to, noun * verb)
     new_position = intcode.position + 4
     %__MODULE__{intcode | addresses: new_addresses, position: new_position}
+  end
+
+  def do_op(3, intcode) do
+    write_to = Map.fetch!(intcode.addresses, intcode.position+1)
+    [input | rest] = intcode.input
+    new_addresses = Map.put(intcode.addresses, write_to, input)
+    new_position = intcode.position + 2
+    %__MODULE__{intcode | addresses: new_addresses, input: rest, position: new_position}
+  end
+
+  def do_op(4, intcode) do
+    output_position = Map.fetch!(intcode.addresses, intcode.position+1)
+    output = Map.fetch!(intcode.addresses, output_position)
+    updated_output = intcode.output <> to_string(output) <> "\n"
+    new_position = intcode.position + 2
+    %__MODULE__{intcode | output: updated_output, position: new_position}
   end
 end

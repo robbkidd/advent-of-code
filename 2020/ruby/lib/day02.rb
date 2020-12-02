@@ -21,21 +21,25 @@ class PasswordEntry
   attr_accessor :policy, :value
   def initialize(entry)
     policy, value = entry.split(": ")
-    @policy = Policy.new(policy)
+    @policy = OldJobPolicy.new(policy)
     @value = value
   end
 
   def valid?
-    occurances = value.count(policy.char)
-    occurances >= policy.min && occurances <= policy.max
+    policy.valid_password? value
   end
 end
 
-class Policy
+class OldJobPolicy
   attr_accessor :min, :max, :char
   def initialize(policy)
     min, max, @char = policy.split(/[-\s]/)
     @min = min.to_i
     @max = max.to_i
+  end
+
+  def valid_password?(password)
+    occurances = password.count(char)
+    occurances >= min && occurances <= max
   end
 end

@@ -38,13 +38,21 @@ describe PasswordEntry do
   end
 end
 
-describe Policy do
+describe OldJobPolicy do
   describe "#new" do
     it "sets some things" do
-      policy = Policy.new("1-3 a")
+      policy = described_class.new("1-3 a")
       expect(policy.min).to eq 1
       expect(policy.max).to eq 3
       expect(policy.char).to eq "a"
+    end
+  end
+
+  describe "valid_password?" do
+    it "checks passwords" do
+      expect(described_class.new("1-3 a").valid_password?("abcde")).to be true
+      expect(described_class.new("1-3 b").valid_password?("cdefg")).to be false
+      expect(described_class.new("2-9 c").valid_password?("ccccccccc")).to be true
     end
   end
 end

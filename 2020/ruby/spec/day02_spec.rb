@@ -1,25 +1,30 @@
 require 'rspec'
 require_relative '../lib/day02'
 
-DATABASE = <<~PASSWORDDB
-             1-3 a: abcde
-             1-3 b: cdefg
-             2-9 c: ccccccccc
-           PASSWORDDB
-
-describe "Example" do
-  it "has 2 valid passwords" do
-    password_list = <<~PASSWORD_LIST
+describe "Examples" do
+  let(:password_list) {
+    <<~PASSWORDDB
       1-3 a: abcde
       1-3 b: cdefg
       2-9 c: ccccccccc
-    PASSWORD_LIST
-    
+    PASSWORDDB
+  }
+
+  it "Part 1 has 2 valid passwords" do
     expect(
       password_list.split("\n")
                    .map { |p| PasswordEntry.new(p).valid? }
     ).to eq(
       [true, false, true]
+    )
+  end
+
+  it "Part 2 has 1 valid password" do
+    expect(
+      password_list.split("\n")
+                   .map { |p| PasswordEntry.new(p, OfficialTobogganCorporatePolicy).valid? }
+    ).to eq(
+      [true, false, false]
     )
   end
 end

@@ -5,11 +5,13 @@ class Day02
   end
 
   def self.part1
-    passwords = load_passwords.map { |p| PasswordEntry.new(p) }
+    passwords = load_passwords.map { |p| PasswordEntry.new(p, OldJobPolicy) }
     passwords.inject(0) { |valid_count, p| valid_count += (p.valid? ? 1 : 0) }
   end
 
   def self.part2
+    passwords = load_passwords.map { |p| PasswordEntry.new(p, OfficialTobogganCorporatePolicy) }
+    passwords.inject(0) { |valid_count, p| valid_count += (p.valid? ? 1 : 0) }
   end
 
   def self.load_passwords
@@ -19,9 +21,9 @@ end
 
 class PasswordEntry
   attr_accessor :policy, :value
-  def initialize(entry)
+  def initialize(entry, policy_engine = OldJobPolicy)
     policy, value = entry.split(": ")
-    @policy = OldJobPolicy.new(policy)
+    @policy = policy_engine.new(policy)
     @value = value
   end
 

@@ -55,7 +55,7 @@ class OldJobPolicy
   end
 
   def valid_password?(password)
-    occurances = password.count(char)
-    min <= occurances && occurances <= max
+    occurrences = password.count(char)
+    min <= occurrences && occurrences <= max
   end
 end

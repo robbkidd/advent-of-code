@@ -33,15 +33,16 @@ class PasswordEntry
 end
 
 class OfficialTobogganCorporatePolicy
-  attr_accessor :first_position, :second_position, :char
+  attr_accessor :first_index, :second_index, :char
   def initialize(policy)
     first_position, second_position, @char = policy.split(/[-\s]/)
-    @first_position = first_position.to_i
-    @second_position = second_position.to_i
+    # account for Toboggan Corporate Policies having no concept of "index zero" 
+    @first_index = first_position.to_i - 1
+    @second_index = second_position.to_i - 1
   end
 
   def valid_password?(password)
-    (password[first_position-1] == char) ^ (password[second_position-1] == char)
+    (password[first_index] == char) ^ (password[second_index] == char)
   end
 end
 

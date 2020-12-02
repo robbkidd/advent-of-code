@@ -66,8 +66,8 @@ describe OfficialTobogganCorporatePolicy do
   describe "#new" do
     it "sets some things" do
       policy = described_class.new("1-3 a")
-      expect(policy.first_position).to eq 1
-      expect(policy.second_position).to eq 3
+      expect(policy.first_index).to eq 0
+      expect(policy.second_index).to eq 2
       expect(policy.char).to eq "a"
     end
   end

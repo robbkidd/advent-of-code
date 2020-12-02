@@ -56,3 +56,22 @@ describe OldJobPolicy do
     end
   end
 end
+
+describe OfficialTobogganCorporatePolicy do
+  describe "#new" do
+    it "sets some things" do
+      policy = described_class.new("1-3 a")
+      expect(policy.first_position).to eq 1
+      expect(policy.second_position).to eq 3
+      expect(policy.char).to eq "a"
+    end
+  end
+
+  describe "valid_password?" do
+    it "checks passwords" do
+      expect(described_class.new("1-3 a").valid_password?("abcde")).to be true
+      expect(described_class.new("1-3 b").valid_password?("cdefg")).to be false
+      expect(described_class.new("2-9 c").valid_password?("ccccccccc")).to be false
+    end
+  end
+end

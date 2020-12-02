@@ -30,6 +30,19 @@ class PasswordEntry
   end
 end
 
+class OfficialTobogganCorporatePolicy
+  attr_accessor :first_position, :second_position, :char
+  def initialize(policy)
+    first_position, second_position, @char = policy.split(/[-\s]/)
+    @first_position = first_position.to_i
+    @second_position = second_position.to_i
+  end
+
+  def valid_password?(password)
+    (password[first_position-1] == char) ^ (password[second_position-1] == char)
+  end
+end
+
 class OldJobPolicy
   attr_accessor :min, :max, :char
   def initialize(policy)

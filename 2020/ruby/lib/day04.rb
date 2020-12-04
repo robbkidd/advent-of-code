@@ -39,6 +39,11 @@ class Passport
   end
 
   def valid?
+    return false unless all_required_fields_present?
+    true
+  end
+  
+  def all_required_fields_present?
     (OUR_HACK & @data.keys).size == OUR_HACK.size
   end
 end

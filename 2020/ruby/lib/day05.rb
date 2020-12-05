@@ -5,15 +5,18 @@ class Day05
   end
 
   def self.part1
-    load_boarding_passes.map { |p| BoardingPass.new(p).seat_id }
-                        .max
+    boarding_pass_seat_ids.max
   end
 
   def self.part2
+    seat_ids = boarding_pass_seat_ids.sort
+    ((seat_ids[0]..seat_ids[-1]).to_a - seat_ids).first
   end
 
-  def self.load_boarding_passes
-    File.read('../inputs/day05-input.txt').split("\n")
+  def self.boarding_pass_seat_ids
+    File.read('../inputs/day05-input.txt')
+        .split("\n")
+        .map { |code| BoardingPass.new(code).seat_id }
   end
 end
 

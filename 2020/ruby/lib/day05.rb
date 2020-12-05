@@ -1,13 +1,31 @@
+require "benchmark"
 class Day05
   def self.go
     day = new
     puts "Part1: #{day.part1}"
     puts "Part2: #{day.part2}"
-    puts ""
-    puts "ಠ_ಠ"
-    puts
+
+    puts "\nಠ_ಠ\n\n"
+
     puts "Or with _only_ binary shenanigans"
     puts day.ಠ_ಠ
+
+    puts "\n⏱\n\n"
+
+    n = 1_000
+    Benchmark.bm do |benchmark|
+      benchmark.report("class & string") do
+        n.times do
+          [ day.part1 , day.part2 ]
+        end
+      end
+    
+      benchmark.report("ಠ_ಠ binary") do
+        n.times do
+          day.ಠ_ಠ
+        end
+      end
+    end
   end
 
   def initialize

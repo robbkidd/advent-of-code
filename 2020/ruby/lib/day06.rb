@@ -10,15 +10,16 @@ class Day06
   end
 
   def input
-    @input.split("\n")
+    @input.split("\n\n").map{ |group| group.split("\n") }
   end
 
   def part1
-    input.chunk_while {|line| line != ""}
-         .map{ |pass_answers| pass_answers.join('').split('').sort.uniq.count }
+    input.map{ |group| group.join('').split('').sort.uniq.count }
          .reduce(:+)
   end
 
   def part2
+    input.map{ |group| group.map{|a| a.split('')}.reduce(:&).length }
+         .reduce(:+)
   end
 end

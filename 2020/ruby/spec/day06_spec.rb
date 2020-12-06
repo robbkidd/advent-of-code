@@ -26,5 +26,7 @@ describe Day06 do
     expect(example_day.part1).to eq(11)
   end
 
-  it "Part2"
+  it "Part2" do
+    expect(example_day.part2).to eq(6)
+  end
 end

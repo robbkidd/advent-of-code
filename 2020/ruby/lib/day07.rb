@@ -12,11 +12,9 @@ class LuggageProcessing
   end
 
   def how_many_must_this_color_contain(target_color)
-    must_contain = 0
-    rules[target_color].each do|color, count|
+    rules[target_color].inject(0) do |must_contain, (color, count)|
       must_contain += count + (count * how_many_must_this_color_contain(color))
     end
-    must_contain
   end
 
   def which_colors_can_contain(target_color)

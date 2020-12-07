@@ -2,12 +2,21 @@ class Day07
   def self.go
     luggage = LuggageProcessing.new
     puts "Part1: #{ luggage.which_colors_can_contain("shiny gold").count }"
+    puts "Part1: #{ luggage.how_many_must_this_color_contain("shiny gold") }"
   end
 end
 
 class LuggageProcessing
   def initialize(input = nil)
     @input = input || File.read("../inputs/day07-input.txt")
+  end
+
+  def how_many_must_this_color_contain(target_color)
+    must_contain = 0
+    rules[target_color].each do|color, count|
+      must_contain += count + (count * how_many_must_this_color_contain(color))
+    end
+    must_contain
   end
 
   def which_colors_can_contain(target_color)

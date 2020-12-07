@@ -47,4 +47,29 @@ describe LuggageProcessing do
       })
     end
   end
+
+  describe "Part 2" do
+    let(:part2_example_input) {
+      <<~INPUT
+        shiny gold bags contain 2 dark red bags.
+        dark red bags contain 2 dark orange bags.
+        dark orange bags contain 2 dark yellow bags.
+        dark yellow bags contain 2 dark green bags.
+        dark green bags contain 2 dark blue bags.
+        dark blue bags contain 2 dark violet bags.
+        dark violet bags contain no other bags.
+      INPUT
+    }
+
+    let(:part2_example) { described_class.new(part2_example_input) }
+
+    context "counts how many pieces of luggage a particular color bag must contain" do
+      it "for part1's rules" do
+        expect(part1_example.how_many_must_this_color_contain("shiny gold")).to eq 32
+      end
+      it "for part2's rules" do
+        expect(part2_example.how_many_must_this_color_contain("shiny gold")).to eq 126
+      end
+    end
+  end
 end

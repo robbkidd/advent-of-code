@@ -1,7 +1,7 @@
 require 'rspec'
 require_relative '../lib/day08'
 
-describe GameConsole do
+describe "Day 8" do
   let(:example_code) {
     <<~EXAMPLE
       nop +0
@@ -26,5 +26,16 @@ describe GameConsole do
   it "detects an infinite loop" do
     console = GameConsole.new(example_code)
     expect{console.run}.to raise_error(GameConsole::InfiniteLoopError, "accumulated 5")
+  end
+
+  it "returns the accumulator value when there is no loop" do
+    console = GameConsole.new(example_code)
+    console.patch_at(7)
+    expect(console.run).to eq 8
+  end
+
+  it "finds all the nop and jmp indexes" do
+    day = Day08.new(example_code)
+    expect(day.patch_sites).to eq []
   end
 end

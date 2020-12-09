@@ -35,7 +35,12 @@ describe "Day 9" do
 
     it "finds the first invalid number" do
       data = XMAS.new(example_input, 5)
-      expect(data.first_invalid).to eq 127
+      expect(data.first_invalid[:value]).to eq 127
+    end
+
+    it "finds the encryption weakness" do
+      data = XMAS.new(example_input, 5)
+      expect(data.encryption_weakness).to eq 62
     end
   end
 end

@@ -15,6 +15,9 @@ class Day12
   end
 
   def part2
+    ship = ShipWithWaypoint.new
+    ship.follow_instructions
+    ship.distance_from_start
   end
 
   def self.example_input
@@ -60,5 +63,31 @@ class Ship
 
   def distance_from_start
     (@starting_point[:x] - @current_coords[:x]).abs + (@starting_point[:y] - @current_coords[:y]).abs
+  end
+end
+
+class ShipWithWaypoint < Ship
+  def initialize(input = nil)
+    super
+    @waypoint = {x: 10, y: 1}
+  end
+
+  def actions
+    @actions ||= {
+      "N" => -> (value) { @waypoint[:y] += value },
+      "S" => -> (value) { @waypoint[:y] -= value },
+      "E" => -> (value) { @waypoint[:x] += value },
+      "W" => -> (value) { @waypoint[:x] -= value },
+      "L" => -> (value) { (value / 90).times {
+                            @waypoint[:x], @waypoint[:y] = -@waypoint[:y], @waypoint[:x]
+                          }
+                        }, 
+      "R" => -> (value) { (value / 90).times { 
+                            @waypoint[:x], @waypoint[:y] = @waypoint[:y], -@waypoint[:x]
+                          } 
+                        }, 
+      "F" => -> (value) { @current_coords[:x] += @waypoint[:x] * value
+                          @current_coords[:y] += @waypoint[:y] * value }
+    }
   end
 end

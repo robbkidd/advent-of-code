@@ -37,13 +37,22 @@ class Day11
 end
 
 class Seats
-  attr_accessor :state, :stable
+  attr_accessor :state, :stable, :height, :width
+
+  OCCUPIED = "#"
+  EMPTY = "L"
+  FLOOR = "."
+  OUT_OF_BOUNDS = nil
+
+  BOX_OFFSETS = [-1, -1, 0, 1, 1].permutation(2).to_a.uniq.freeze
 
   def initialize(input = nil)
     @input = (input || File.read("../inputs/day11-input.txt"))
     @state = start_state
     @states = [] << @state
     @stable = false
+    @height = start_state.length
+    @width = start_state.first.length
   end
 
   def to_s
@@ -51,7 +60,7 @@ class Seats
   end
 
   def occupied_seat_count
-    @state.to_s.count("#")
+    @state.to_s.count(OCCUPIED)
   end
 
   def start_state
@@ -72,91 +81,67 @@ class Seats
     end
   end
 
-  def height
-    @height ||= start_state.length
-  end
-
-  def width
-    @width ||= start_state.first.length
-  end
-
-  def neighbors_for(y:, x:)
-    neighbor_refs = [-1, -1, 0, 1, 1].permutation(2).to_a.uniq
-    neighbor_coords = neighbor_refs.map{ |yd, xd|
-      if ( 0 <= y+yd && y+yd < height ) &&
-         ( 0 <= x+xd && x+xd < width )
-        state[ y+yd ][ x+xd ]
-      else 
-        nil
-      end
-    }.reject{ |seat| seat.nil? }
-  end
-
   def next_state
     (0..height-1).map do |y|
       (0..width-1).map do |x|
-        neighbors = neighbors_for(y: y, x: x)
-        case state[y][x]
-        when "."
-          "."
-        when "L"
-          neighbors.count("#") == 0 ? "#" : "L"
-        when "#"
-          neighbors.count("#") >= 4  ? "L" : "#"
-        else
-          raise "Something wrong with your scanner."
-        end
+        seat_rules[ state[y][x] ].call(y, x)
       end
     end
+  end
+
+  def seat_rules
+    @seat_rules ||= { 
+      FLOOR => -> (_, _) { FLOOR },
+      EMPTY => -> (y, x) { neighbors_for(y: y, x: x).count(OCCUPIED) == 0 ? OCCUPIED : EMPTY },
+      OCCUPIED => -> (y, x) { neighbors_for(y: y, x: x).count(OCCUPIED) >= 4  ? EMPTY : OCCUPIED },
+      OUT_OF_BOUNDS => -> (_, _) { OUT_OF_BOUNDS },
+    }
+  end
+
+  def neighbors_for(y:, x:)
+    neighbor_coords = BOX_OFFSETS.map{ |dy, dx|
+      if ( 0 <= y+dy && y+dy < height ) &&
+         ( 0 <= x+dx && x+dx < width )
+        state[ y+dy ][ x+dx ]
+      else 
+        OUT_OF_BOUNDS
+      end
+    }.reject{ |seat| seat == OUT_OF_BOUNDS }
   end
 end
 
 class VisibleSeats < Seats
+  def seat_rules
+    @seat_rules ||= super.merge({ 
+      EMPTY => -> (y, x) { visible_seats_for(y: y, x: x).count(OCCUPIED) == 0 ? OCCUPIED : EMPTY },
+      OCCUPIED => -> (y, x) { visible_seats_for(y: y, x: x).count(OCCUPIED) >= 5  ? EMPTY : OCCUPIED },
+    })
+  end
+  
   def visible_seats_for(y:, x:)
-    max_iterations = [height, width].max
-    vectors = [-1, -1, 0, 1, 1].permutation(2).to_a.uniq
+    vectors = BOX_OFFSETS.dup
     i = 0
-    until vectors.all? {|seat| ["#", "L", nil].include? seat}
+    until vectors.all? {|seat| [OCCUPIED, EMPTY, OUT_OF_BOUNDS].include? seat}
       i += 1
-      vectors.map! do |vector|
-        case vector
-        when nil; nil
-        when String; vector
+      vectors.map! do |in_this_direction|
+        case in_this_direction
+        when OUT_OF_BOUNDS; OUT_OF_BOUNDS
+        when String; in_this_direction
         when Array
-          dy, dx = vector.map {|n| n*i}
+          dy, dx = in_this_direction.map {|n| n*i}
           if ( 0 <= y+dy && y+dy < height ) &&
              ( 0 <= x+dx && x+dx < width )
-            spot = state[ y+dy ][ x+dx ]
-            if %w{# L}.include?(spot)
-              spot # it's a chair, occupied or empty
+            if [OCCUPIED, EMPTY].include?(state[ y+dy ][ x+dx ])
+              state[ y+dy ][ x+dx ] # it's a chair, occupied or empty
             else
-              vector # not a chair, keep checking
+              in_this_direction # not a chair, keep checking
             end
           else 
-            nil # past the edge of the seating area
+            OUT_OF_BOUNDS # past the edge of the seating area
           end
         end
       end
     end
-    vectors.reject{ |seat| seat.nil? } # chuck out of bounds
+    vectors.reject{ |seat| seat == OUT_OF_BOUNDS } # chuck out of bounds
   end
-
-  def next_state
-    (0..height-1).map do |y|
-      (0..width-1).map do |x|
-        neighbors = visible_seats_for(y: y, x: x)
-        case state[y][x]
-        when "."
-          "."
-        when "L"
-          neighbors.count("#") == 0 ? "#" : "L"
-        when "#"
-          neighbors.count("#") >= 5 ? "L" : "#"
-        else
-          raise "Something wrong with your scanner."
-        end
-      end
-    end
-  end
-
 end

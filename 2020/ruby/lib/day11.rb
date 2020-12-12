@@ -10,13 +10,14 @@ class Day11
 
   def part1
     seats = Seats.new
-    until seats.stable do
-      seats.tick
-    end
+    seats.find_stability
     seats.occupied_seat_count
   end
 
   def part2
+    seats = VisibleSeats.new
+    seats.find_stability
+    seats.occupied_seat_count
   end
 
   def self.example_input
@@ -55,6 +56,10 @@ class Seats
 
   def start_state
     @input.split("\n").map{ |row| row.chars }
+  end
+
+  def find_stability
+    tick until stable
   end
 
   def tick
@@ -104,4 +109,54 @@ class Seats
       end
     end
   end
+end
+
+class VisibleSeats < Seats
+  def visible_seats_for(y:, x:)
+    max_iterations = [height, width].max
+    vectors = [-1, -1, 0, 1, 1].permutation(2).to_a.uniq
+    i = 0
+    until vectors.all? {|seat| ["#", "L", nil].include? seat}
+      i += 1
+      vectors.map! do |vector|
+        case vector
+        when nil; nil
+        when String; vector
+        when Array
+          dy, dx = vector.map {|n| n*i}
+          if ( 0 <= y+dy && y+dy < height ) &&
+             ( 0 <= x+dx && x+dx < width )
+            spot = state[ y+dy ][ x+dx ]
+            if %w{# L}.include?(spot)
+              spot # it's a chair, occupied or empty
+            else
+              vector # not a chair, keep checking
+            end
+          else 
+            nil # past the edge of the seating area
+          end
+        end
+      end
+    end
+    vectors.reject{ |seat| seat.nil? } # chuck out of bounds
+  end
+
+  def next_state
+    (0..height-1).map do |y|
+      (0..width-1).map do |x|
+        neighbors = visible_seats_for(y: y, x: x)
+        case state[y][x]
+        when "."
+          "."
+        when "L"
+          neighbors.count("#") == 0 ? "#" : "L"
+        when "#"
+          neighbors.count("#") >= 5 ? "L" : "#"
+        else
+          raise "Something wrong with your scanner."
+        end
+      end
+    end
+  end
+
 end

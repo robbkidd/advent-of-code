@@ -15,6 +15,9 @@ class Day14
   end
 
   def part2
+    computer = SeaPortComputerV2.new
+    computer.program_init
+    computer.check_sum
   end
 
   def self.example_input
@@ -23,6 +26,15 @@ class Day14
       mem[8] = 11
       mem[7] = 101
       mem[8] = 0
+    EXAMPLE
+  end
+
+  def self.example_input2
+    <<~EXAMPLE
+      mask = 000000000000000000000000000000X1001X
+      mem[42] = 100
+      mask = 00000000000000000000000000000000X0XX
+      mem[26] = 1
     EXAMPLE
   end
 end
@@ -68,8 +80,36 @@ class SeaPortComputer
 
   def set_mem(args)
     address, value = *args
-    expanded_value = value.to_s(2).rjust(36, "0").split('')
+    expanded_value = value.to_s(2).rjust(36, "0").chars
     mask.each { |idx, bit| expanded_value[idx] = bit }
-    memory[address] = expanded_value.join("").to_i(2)
+    memory[address] = expanded_value.join.to_i(2)
+  end
+end
+
+class SeaPortComputerV2 < SeaPortComputer
+
+  def set_mask(mask)
+    @mask = mask
+  end
+
+  def set_mem(args)
+    address, value = *args
+    floating_bit_count = 0
+
+    masked_address = address.to_s(2).rjust(36, "0").chars.map.with_index do |bit, idx|
+      case mask[idx]
+      when "0"; bit
+      when "1"; "1"
+      when "X"
+        floating_bit_count += 1
+        "%s"
+      else
+        raise "You've got a funny mask there."
+      end
+    end.join
+
+    [0,1].repeated_permutation(floating_bit_count).each do |combo|
+      memory[ (masked_address % combo).to_i(2) ] = value
+    end
   end
 end

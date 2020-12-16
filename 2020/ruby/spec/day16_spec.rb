@@ -19,6 +19,8 @@ end
 
 describe TicketValidator do
   let(:validator) { TicketValidator.new(Day16.example_input) }
+  let(:validator2) { TicketValidator.new(Day16.example_input2) }
+
   it "knows the rules" do
     rules_input = Day16.example_input.split("\n\n").first.split("\n")
     expect(validator.rules.map(&:to_s)).to eq(rules_input)
@@ -37,5 +39,22 @@ describe TicketValidator do
 
   it "computes the scanning error rate" do
     expect(validator.ticket_scanning_error_rate).to eq(71)
+  end
+
+  it "knows which tickets are valid" do
+    expect(validator.valid_tickets).to eq([[7,3,47]])
+    expect(validator2.valid_tickets).to eq(validator2.nearby_tickets)
+  end
+
+  it "figures out field order" do
+    expect(validator2.field_order_based_on_valid_tickets)
+      .to eq({"class" => 1,
+              "row" => 0,
+              "seat" => 2,
+              })
+  end
+
+  it "figures out my ticket" do
+    expect(validator2.my_ticket).to eq([11,12,13])
   end
 end

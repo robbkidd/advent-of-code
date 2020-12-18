@@ -17,6 +17,9 @@ class Day17
   end
 
   def part2
+    cubes = ConwayHypercubes.new
+    6.times { cubes.tick }
+    cubes.currently_active.count
   end
 
   def self.example_input
@@ -31,12 +34,24 @@ end
 class ConwayCubes
   attr_accessor :currently_active, :states
 
-  CUBE_OFFSETS = [-1, -1, -1, 0, 0, 1, 1, 1].permutation(3).to_a.uniq.freeze
-
   def initialize(input = nil)
     @input = (input || File.read("../inputs/day17-input.txt"))
     @currently_active = start_state
     @states = [] << @currently_active
+  end
+
+  def dimensions
+    3
+  end
+
+  def offsets
+    @offsets ||= ( ([-1, 1] * dimensions) +
+                   ([0] * (dimensions-1)) # omit reference to self
+                 ).permutation(dimensions).to_a.uniq.freeze
+  end
+
+  def extra_dimensions
+    [0] * (dimensions-2)
   end
 
   def start_state
@@ -45,7 +60,7 @@ class ConwayCubes
           .map { |row| row.chars }
           .each_with_index do |row, y|
             row.each_with_index do |cube, x|
-              start_cubes << [0,y,x] if cube == "#"
+              start_cubes << extra_dimensions+[y,x] if cube == "#"
             end
           end
     start_cubes
@@ -72,7 +87,7 @@ class ConwayCubes
   end
 
   def neighbors_for(location)
-    neighbor_coords = CUBE_OFFSETS.map{ |offset|
+    neighbor_coords = offsets.map{ |offset|
       location.zip(offset)
               .map { |p| p.reduce(&:+) }
     }
@@ -80,5 +95,11 @@ class ConwayCubes
 
   def neighbors_active_for(location)
     neighbors_for(location).select { |neighbor_coords| currently_active.include?(neighbor_coords) }
+  end
+end
+
+class ConwayHypercubes < ConwayCubes
+  def dimensions
+    4
   end
 end

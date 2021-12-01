@@ -22,4 +22,8 @@ class TestDay01 < Minitest::Test
 	def test_part1_example
 		assert_equal 7, @day01.num_increases(PART1_EXAMPLE_INPUT)
 	end
+
+	def test_part2_example
+		assert_equal 5, @day01.sliding_window_increases(PART1_EXAMPLE_INPUT)
+	end
 end

@@ -5,26 +5,28 @@ class Day01
     puts "Part 2: #{day.part2}"
   end
 
+  def initialize(input=nil)
+    @sonar_sweep = input || sonar_sweep_report
+  end
+
   def part1
-    sonar_sweep = sonar_sweep_report
-    num_increases(sonar_sweep)
+    num_increases(@sonar_sweep)
   end
 
   def part2
-    sonar_sweep = sonar_sweep_report
-    sliding_window_increases(sonar_sweep)
+    sliding_window_increases(@sonar_sweep)
   end
 
-  def num_increases(sonar_sweep)
-    sonar_sweep
+  def num_increases(depths)
+    depths
       .each_cons(2)
       .filter { |prv,nxt| prv < nxt }
       .length
   end
 
-  def sliding_window_increases(sonar_sweep)
+  def sliding_window_increases(depths)
     num_increases(
-      sonar_sweep
+      depths
         .each_cons(3)
         .map {|window| window.reduce(&:+) }
     )

@@ -1,0 +1,13 @@
+name: aoc2020
+version: 0.1.0
+
+authors:
+  - Robb Kidd <robb@thekidds.org>
+
+targets:
+  aoc2020:
+    main: src/aoc2020.cr
+
+crystal: 0.35.0
+
+license: MIT

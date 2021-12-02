@@ -1,0 +1,13 @@
+name: aoc2019
+version: 0.1.0
+
+authors:
+  - Robb Kidd <robb@thekidds.org>
+
+targets:
+  aoc2019:
+    main: src/aoc2019.cr
+
+crystal: 0.32.0
+
+license: MIT

@@ -14,6 +14,8 @@ class Day18
   end
 
   def part2
+    @input.map { |line| TheNewNewMath.solve(line) }
+          .reduce(&:+)
   end
 
   def initialize
@@ -57,6 +59,34 @@ class TheNewMath
       start = operands.shift
       operations = operators.zip(operands)
       operations.reduce(start) {|acc, (opr, num)| acc.send(opr, num) }
+    end
+  end
+end
+
+class TheNewNewMath < TheNewMath
+  class << self
+    def solve(input)
+      expression = moonify(input)
+      while expression.match?(/[☾☽]/) do
+        puts "while #{expression}"
+        pluck_simple_expressions(expression).each do |simple_expression|
+          result = add_first_then_multiply(simple_expression).to_s
+          expression.gsub!(simple_expression, result)
+        end
+      end
+      add_first_then_multiply(expression).to_i
+    end
+
+    def add_first_then_multiply(simple_expression)
+      raise "No parens allowed inside." if simple_expression[1..-2].match?(/[☾☽]/)
+      working_expression = simple_expression.dup
+      while working_expression.match(/(\d+\s\+\s\d+)/)
+        puts "working #{working_expression}"
+        simple_add = working_expression.match(/(\d+\s\+\s\d+)/)[0]
+        working_expression.gsub!(simple_add, solve_left_to_right(simple_add).to_s)
+      end
+      puts "to solve: #{working_expression}"
+      solve_left_to_right(working_expression).to_s
     end
   end
 end

@@ -55,11 +55,35 @@ describe "Day 9" do
   }
 
   describe AdapterChain do
-    it "figures out joltage differences" do
-      chain1 = AdapterChain.new(example_input_1)
-      expect(chain1.joltage_differences).to eq({1 => 7, 3 => 5})
-      chain2 = AdapterChain.new(example_input_2)
-      expect(chain2.joltage_differences).to eq({1 => 22, 3 => 10})
+    let(:chain1) { AdapterChain.new(example_input_1) }
+    let(:chain2) { AdapterChain.new(example_input_2) }
+
+      
+    context "figures out joltage differences" do
+      it "for example 1" do
+        expect(chain1.joltage_differences).to eq([1, 3, 1, 1, 1, 3, 1, 1, 3, 1, 3, 3])
+      end
+      it "for example 2" do
+        expect(chain2.joltage_differences).to eq([1, 1, 1, 1, 3, 1, 1, 1, 1, 3, 3, 1, 1, 1, 3, 1, 1, 3, 3, 1, 1, 1, 1, 3, 1, 3, 3, 1, 1, 1, 1, 3])
+      end
+    end
+
+    context "figures out joltage distribution" do
+      it "for example 1" do
+        expect(chain1.joltage_distribution).to eq({1 => 7, 3 => 5})
+      end
+      it "for example 2" do
+        expect(chain2.joltage_distribution).to eq({1 => 22, 3 => 10})
+      end
+    end
+
+    context "finds valid arrangements" do
+      it "for example 1" do
+        expect(chain1.arrangements).to eq({}) # 8
+      end
+      it "for example 2" do
+        expect(chain2.arrangements).to eq({}) # 19_208
+      end
     end
   end
 end

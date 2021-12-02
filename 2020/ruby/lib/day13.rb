@@ -13,6 +13,7 @@ class Day13
   end
 
   def part2
+    BusSchedule.new.gold_coin_contest
   end
 
   def self.example_input
@@ -24,14 +25,16 @@ class Day13
 end
 
 class BusSchedule
-  attr_reader :earliest_time, :buses
+  require 'prime'
+  attr_reader :earliest_time, :busses
 
   def initialize(input = nil)
-    time_in, buses_in = (input || File.read("../inputs/day13-input.txt")).split("\n")
+    time_in, busses_in = (input || File.read("../inputs/day13-input.txt")).split("\n")
     @earliest_time = time_in.to_i
-    @buses = buses_in.split(",")
-                     .reject{|bus| bus == "x"}
-                     .map(&:to_i)
+    @busses = busses_in.split(",")
+                       .each_with_index
+                       .reject{ |bus, idx| bus == "x" }
+                       .map{ |bus, idx| [ bus.to_i, idx ] }
   end
 
   def solve_part1
@@ -40,10 +43,42 @@ class BusSchedule
   end
 
   def next_arriving_bus
-    buses.map{ |bus|
-      { bus_id: bus, 
-        arrival_time: bus * (1 + (earliest_time / bus))
+    busses.map{ |(bus_id, _)|
+      { bus_id: bus_id, 
+        arrival_time: bus_id * (1 + (earliest_time / bus_id))
       }
     }.min_by{ |bus| bus[:arrival_time] }
+  end
+
+  def gold_coin_contest
+    current_timestamp = 0
+    timestamp_factors = busses.shift.first.prime_division.map(&:first)
+
+    busses.each do |(bus, offset)|
+      # The first bus will depart at t + 0 every t = bus * i. In fact, for any bus it's
+      # true that once you find a valid t where t + offset = bus * i, the next
+      # valid t for that bus is (t + bus).
+      #
+      # So you can skip all the ts inbetween.
+      skip_factor = timestamp_factors.inject(&:*)
+
+      # Find the next t for which [t + offset = bus * i].
+      loop do
+        minutes_to_departure = bus - (current_timestamp % bus)
+        break if minutes_to_departure == offset % bus
+        current_timestamp += skip_factor
+      end
+
+      # If all busses are prime numbers (they are in AoC), the prime-only
+      # solution would be:
+      #
+      # timestamp_factors.push(bus)
+      #
+      # The general purpose solution looks like this:
+      timestamp_factors.push(*bus.prime_division.map(&:first))
+      timestamp_factors.uniq!
+    end
+
+    current_timestamp
   end
 end

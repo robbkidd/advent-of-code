@@ -1,0 +1,185 @@
+strict digraph {
+    "QLSVN"
+    "BPNVK"
+    "PRMR"
+    "VNFJQ"
+    "GHQPH"
+    "VHFCR"
+    "BRXLV"
+    "DFCT"
+    "GDJGV"
+    "BZFH"
+    "JBHKV"
+    "RBFX"
+    "KRTGD"
+    "NJFXK"
+    "MBMKZ"
+    "XHTJF"
+    "JZQJ"
+    "BVFPF"
+    "HJDB"
+    "MBFK"
+    "CVJQG"
+    "RGZDK"
+    "FPZLF"
+    "VSRMJ"
+    "RXSZS"
+    "SKBV"
+    "FUEL"
+    "JRXQ"
+    "QGDSV"
+    "CTRH"
+    "GZLHP"
+    "LQGC"
+    "ZJHKP"
+    "WFSV"
+    "QBDQ"
+    "ZJZRN"
+    "VLJWQ"
+    "XSRWM"
+    "VBHVQ"
+    "BQGP"
+    "NZVL"
+    "XKTMK"
+    "WBKQ"
+    "SZDWB"
+    "TCPN"
+    "MCQS"
+    "DRWB"
+    "HKCVW"
+    "GCBR"
+    "ORE"
+    "WMCD"
+    "ZWQX"
+    "LZKJZ"
+    "QNXC"
+    "TGJP"
+    "TFQH"
+    "BKNQT"
+    "ZKCXK"
+    "RHJCQ"
+    "XFNPT"
+    "DXBZJ"
+    "QLSVN" -> "JBHKV" [weight=1]
+    "QLSVN" -> "XHTJF" [weight=2]
+    "BPNVK" -> "ORE" [weight=104]
+    "PRMR" -> "BZFH" [weight=2]
+    "VNFJQ" -> "XFNPT" [weight=1]
+    "VNFJQ" -> "QNXC" [weight=1]
+    "VNFJQ" -> "BKNQT" [weight=7]
+    "GHQPH" -> "DRWB" [weight=8]
+    "GHQPH" -> "RXSZS" [weight=12]
+    "GHQPH" -> "SKBV" [weight=15]
+    "VHFCR" -> "ZKCXK" [weight=7]
+    "BRXLV" -> "ORE" [weight=117]
+    "DFCT" -> "GZLHP" [weight=1]
+    "GDJGV" -> "XSRWM" [weight=1]
+    "BZFH" -> "TGJP" [weight=1]
+    "BZFH" -> "SKBV" [weight=6]
+    "JBHKV" -> "BPNVK" [weight=1]
+    "JBHKV" -> "RXSZS" [weight=1]
+    "RBFX" -> "VLJWQ" [weight=6]
+    "RBFX" -> "FPZLF" [weight=7]
+    "RBFX" -> "KRTGD" [weight=18]
+    "RBFX" -> "JRXQ" [weight=26]
+    "RBFX" -> "HKCVW" [weight=6]
+    "RBFX" -> "BKNQT" [weight=6]
+    "RBFX" -> "ZKCXK" [weight=8]
+    "KRTGD" -> "BVFPF" [weight=1]
+    "NJFXK" -> "TCPN" [weight=4]
+    "NJFXK" -> "DRWB" [weight=3]
+    "NJFXK" -> "BVFPF" [weight=7]
+    "MBMKZ" -> "RHJCQ" [weight=9]
+    "XHTJF" -> "CVJQG" [weight=5]
+    "XHTJF" -> "MBFK" [weight=4]
+    "XHTJF" -> "GZLHP" [weight=7]
+    "JZQJ" -> "HKCVW" [weight=12]
+    "BVFPF" -> "MBFK" [weight=3]
+    "HJDB" -> "XFNPT" [weight=7]
+    "HJDB" -> "GDJGV" [weight=1]
+    "MBFK" -> "ORE" [weight=132]
+    "CVJQG" -> "RXSZS" [weight=1]
+    "RGZDK" -> "RHJCQ" [weight=4]
+    "RGZDK" -> "SZDWB" [weight=4]
+    "RGZDK" -> "WMCD" [weight=1]
+    "FPZLF" -> "WMCD" [weight=1]
+    "VSRMJ" -> "QBDQ" [weight=8]
+    "RXSZS" -> "ORE" [weight=192]
+    "SKBV" -> "QLSVN" [weight=3]
+    "FUEL" -> "DRWB" [weight=26]
+    "FUEL" -> "VBHVQ" [weight=7]
+    "FUEL" -> "NJFXK" [weight=21]
+    "FUEL" -> "VNFJQ" [weight=24]
+    "FUEL" -> "RBFX" [weight=39]
+    "FUEL" -> "TFQH" [weight=42]
+    "FUEL" -> "ZWQX" [weight=1]
+    "JRXQ" -> "XHTJF" [weight=1]
+    "QGDSV" -> "CTRH" [weight=7]
+    "QGDSV" -> "SKBV" [weight=1]
+    "CTRH" -> "VSRMJ" [weight=8]
+    "CTRH" -> "BVFPF" [weight=1]
+    "GZLHP" -> "BPNVK" [weight=1]
+    "GZLHP" -> "RXSZS" [weight=2]
+    "GZLHP" -> "MBFK" [weight=10]
+    "LQGC" -> "WBKQ" [weight=5]
+    "LQGC" -> "MBMKZ" [weight=7]
+    "ZJHKP" -> "XKTMK" [weight=3]
+    "ZJHKP" -> "QGDSV" [weight=4]
+    "WFSV" -> "GZLHP" [weight=5]
+    "QBDQ" -> "CVJQG" [weight=13]
+    "QBDQ" -> "DXBZJ" [weight=8]
+    "ZJZRN" -> "DFCT" [weight=2]
+    "ZJZRN" -> "HKCVW" [weight=1]
+    "VLJWQ" -> "KRTGD" [weight=13]
+    "VLJWQ" -> "GHQPH" [weight=5]
+    "XSRWM" -> "BZFH" [weight=13]
+    "VBHVQ" -> "XFNPT" [weight=12]
+    "VBHVQ" -> "JZQJ" [weight=2]
+    "VBHVQ" -> "BQGP" [weight=1]
+    "BQGP" -> "XHTJF" [weight=14]
+    "BQGP" -> "WBKQ" [weight=26]
+    "NZVL" -> "LQGC" [weight=6]
+    "XKTMK" -> "VHFCR" [weight=10]
+    "XKTMK" -> "JZQJ" [weight=13]
+    "WBKQ" -> "DFCT" [weight=22]
+    "WBKQ" -> "TGJP" [weight=17]
+    "SZDWB" -> "DFCT" [weight=6]
+    "SZDWB" -> "PRMR" [weight=1]
+    "TCPN" -> "JBHKV" [weight=16]
+    "TCPN" -> "DRWB" [weight=10]
+    "MCQS" -> "PRMR" [weight=1]
+    "MCQS" -> "XKTMK" [weight=3]
+    "DRWB" -> "MBFK" [weight=3]
+    "HKCVW" -> "CVJQG" [weight=17]
+    "HKCVW" -> "GCBR" [weight=4]
+    "GCBR" -> "BZFH" [weight=1]
+    "WMCD" -> "XSRWM" [weight=1]
+    "ZWQX" -> "ZJZRN" [weight=1]
+    "ZWQX" -> "XFNPT" [weight=1]
+    "ZWQX" -> "RHJCQ" [weight=7]
+    "ZWQX" -> "NJFXK" [weight=1]
+    "ZWQX" -> "NZVL" [weight=4]
+    "ZWQX" -> "MCQS" [weight=32]
+    "LZKJZ" -> "BQGP" [weight=2]
+    "QNXC" -> "RGZDK" [weight=1]
+    "QNXC" -> "BVFPF" [weight=10]
+    "TGJP" -> "TCPN" [weight=2]
+    "TGJP" -> "WFSV" [weight=1]
+    "TFQH" -> "HJDB" [weight=1]
+    "TFQH" -> "PRMR" [weight=1]
+    "TFQH" -> "KRTGD" [weight=4]
+    "TFQH" -> "NJFXK" [weight=1]
+    "TFQH" -> "LZKJZ" [weight=1]
+    "TFQH" -> "VNFJQ" [weight=1]
+    "TFQH" -> "QBDQ" [weight=6]
+    "TFQH" -> "ZJHKP" [weight=1]
+    "BKNQT" -> "XHTJF" [weight=10]
+    "ZKCXK" -> "XHTJF" [weight=7]
+    "ZKCXK" -> "TCPN" [weight=8]
+    "ZKCXK" -> "DFCT" [weight=3]
+    "RHJCQ" -> "DFCT" [weight=35]
+    "XFNPT" -> "CTRH" [weight=1]
+    "XFNPT" -> "SKBV" [weight=14]
+    "XFNPT" -> "BZFH" [weight=12]
+    "DXBZJ" -> "BRXLV" [weight=2]
+}

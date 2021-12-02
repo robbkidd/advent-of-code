@@ -11,6 +11,16 @@ class Day12
   end
 
   def self.part2
+    original_moons = Moon.parse_input(EXAMPLE2)
+    moons = original_moons.map(&:dup)
+    Moon.step_time(moons)
+    steps = 2
+    while moons != original_moons do
+      Moon.step_time(moons)
+      steps += 1
+      puts steps if steps % 100_000 == 0
+    end
+    steps
   end
 
   def self.jupiters_moons
@@ -100,6 +110,12 @@ class Moon
   def kinetic_energy
     velocity.map(&:abs)
             .reduce(&:+)
+  end
+
+  def ==(other)
+    self.id == other.id &&
+      self.position == other.position &&
+      self.velocity == other.velocity
   end
 
   def to_s

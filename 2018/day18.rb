@@ -1,6 +1,7 @@
 class Day18
   def self.go
     puts "Part1: #{part1}"
+    puts "Part2: #{part2}"
   end
 
   def self.part1
@@ -8,18 +9,47 @@ class Day18
     10.times { collection.tick }
     collection.current_resource_value
   end
+
+  def self.part2
+    collection = SlowLumberCollection.new
+    400.times { collection.tick }
+    collection.current_resource_value
+  end
+end
+
+Scan = Struct.new(:acres) do
+  def to_s
+    acres.map{ |row| row.join }.join("\n")
+  end
+
+  def resource_value
+    to_s.count("|") * to_s.count("#")
+  end
 end
 
 class SlowLumberCollection
-  attr_accessor :state
+  attr_accessor :state, :scans, :loop_start, :loop_end
 
   def initialize(input = nil)
     @input = input ||= File.read("day18-input.txt")
     @state = start_state
+    @scans = [] << Scan.new(@state)
+    @loop_start = nil
+    @loop_end = nil
   end
 
   def tick
     @state = next_state
+    scan = Scan.new(@state)
+    if !loop_found? && (@loop_start = @scans.find_index(scan))
+      @loop_end = @states.length - 1
+      puts "Found the loop: #{@loop_start} - #{@loop_end}"
+    end
+    @scans << scan
+  end
+
+  def loop_found?
+    loop_start && loop_end
   end
 
   def current_resource_value
@@ -66,7 +96,7 @@ class SlowLumberCollection
       if ( 0 <= y+yd && y+yd < height ) &&
          ( 0 <= x+xd && x+xd < width )
         state[ y+yd ][ x+xd ]
-      else 
+      else
         nil
       end
     }.reject{ |acre| acre.nil? }

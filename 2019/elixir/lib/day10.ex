@@ -10,6 +10,37 @@ defmodule Day10 do
     |> best_station_location_in()
   end
 
+  def part2 do
+    asteroids = get_day_input()
+                |> find_asteroids()
+
+    {station, _} = best_station_location_in(asteroids)
+    asteroids
+    |> order_targets(station)
+  end
+
+  def order_targets(asteroids, station) do
+    asteroids
+    |> MapSet.delete(station)
+    |> Enum.map(fn asteroid ->
+      {asteroid, polar_coordinates_to(station, asteroid)}
+    end)
+    |> Enum.group_by(fn {_asteroid, {_r, theta}} -> theta end)
+    |> Enum.map(fn {theta, asteroids} ->
+      [ theta, asteroids
+               |> Enum.sort_by(fn {_roid, {r, _theta}} -> r end)
+               |> Enum.map(fn {roid, _polar_coordinates} -> roid end)
+      ]
+     end)
+     |> Enum.sort()
+     #|> pluck_em_off()
+  end
+
+  def pluck_em_off(asteroids_by_angle, targets \\ [])
+
+  def pluck_em_off(asteroids_by_angle, targets) do
+  end
+
   def best_station_location_in(asteroids) do
     asteroids
     |> Enum.map(fn asteroid ->
@@ -30,7 +61,13 @@ defmodule Day10 do
     {diff_x, diff_y} = {(reference.x - other.x), (reference.y - other.y)}
     r = :math.sqrt(:math.pow(diff_x, 2) + :math.pow(diff_y, 2))
     theta = :math.atan2(diff_y, diff_x)
-    {r, theta}
+    tweeked_theta =
+      if theta < -:math.pi / 2 do
+        (2 * :math.pi) + theta
+      else
+        theta
+      end
+    {r, tweeked_theta}
   end
 
   def find_asteroids(input) do

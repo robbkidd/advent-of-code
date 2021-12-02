@@ -37,11 +37,43 @@ defmodule Intcode do
   def run(%__MODULE__{state: :halt}=intcode), do: intcode
 
   def run(intcode) do
-    opcode = Map.fetch!(intcode.addresses, intcode.position)
+    instruction = Map.fetch!(intcode.addresses, intcode.position)
+    {parameter_modes, opcode} = parse_instruction(instruction)
 
     do_op(opcode, intcode)
     |> run()
-   end
+  end
+
+
+ @doc """
+  Hello world.
+
+  ## Examples
+
+      iex> Intcode.parse_instruction(2)
+      {[:position, :position, :position], 2}
+      iex> Intcode.parse_instruction(1002)
+      {[:position, :immediate, :position], 2}
+
+  """
+  def parse_instruction(instruction) when is_integer(instruction) do
+    <<raw_parameter_modes::binary-size(3), opcode::binary-size(2)>> =
+      Integer.to_string(instruction)
+      |> String.pad_leading(5, "0")
+
+    { raw_parameter_modes
+      |> String.graphemes()
+      |> Enum.reverse()
+      |> Enum.map(fn param_mode ->
+           case param_mode do
+             "0" -> :position
+             "1" -> :immediate
+           end
+         end) ,
+      opcode
+      |> String.to_integer()
+    }
+  end
 
   def do_op(99, intcode) do
     %__MODULE__{intcode | state: :halt}

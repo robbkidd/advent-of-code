@@ -9,7 +9,7 @@ describe "BusSchedule" do
   end
 
   it "has a list of buses" do
-    expect(example.buses).to eq [7, 13, 59, 31, 19]
+    expect(example.busses.map{|b| b[0]}).to eq [7, 13, 59, 31, 19]
   end
 
   it "finds the next arriving bus" do
@@ -22,5 +22,9 @@ describe "BusSchedule" do
 
   it "solves for part 1" do
     expect(example.solve_part1).to eq 295
+  end
+
+  it "solves for part 2" do
+    expect(example.gold_coin_contest).to eq 1068781
   end
 end

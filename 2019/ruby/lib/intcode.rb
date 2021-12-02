@@ -24,7 +24,7 @@ class Intcode
       relative_base: @relative_base.dup,
       params: @params.dup,
       input: @input.dup,
-      output: @output.dup,
+      #output: @output.dup,
     }
   end
 

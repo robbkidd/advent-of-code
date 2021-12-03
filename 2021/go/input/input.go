@@ -18,7 +18,8 @@ func JustGiveMeIntsMan(numbersNotYetTheirTrueSelves []string) []int {
 }
 
 func Lines(input string) []string {
-	return strings.Split(input, "\n")
+	lines := strings.Split(input, "\n")
+	return lines[:len(lines)-1]
 }
 
 func Read(day string) string {

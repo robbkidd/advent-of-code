@@ -1,0 +1,43 @@
+require 'erb'
+
+task :default => :test
+
+def what_day(arg=nil)
+  if arg
+    arg
+  else
+    Time.now.day
+  end.to_s.rjust(2, '0')
+end
+
+task :run, [:day] do |t, args|
+  day = what_day(args[:day])
+  puts "OK. Let's run Day#{day}!\n\n"
+  require "./day#{day}"
+end
+
+task :test, [:day] do |t, args|
+  ENV['TEST'] = 'yup'
+  day = what_day(args[:day])
+  puts "Wooo! Let's test Day#{day}!\n\n"
+  require "./day#{day}"
+end
+
+task :new do
+  day = what_day
+  Rake::Task["day#{day}"].invoke
+end
+
+rule ( /^day\d\d$/ ) do |task|
+  output_file = "./#{task.name}.rb"
+  if File.exist?(output_file)
+    puts "🛑 No. I'm protecting you from yourself. That file already exists."
+  else
+    puts "🎶 bring on the newwww daaaaay 🎶"
+    File.write(
+      output_file,
+      ERB.new(File.read('./template.rb.erb'))
+         .result_with_hash(day: task.name)
+    )
+  end
+end

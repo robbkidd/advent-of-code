@@ -1,0 +1,31 @@
+class <%= day.capitalize %>
+  def self.go
+    day = new
+    puts "Part 1: #{day.part1}"
+    puts "Part 2: #{day.part2}"
+  end
+
+  def part1
+  end
+
+  def part2
+  end
+
+  def input
+    File.read('../inputs/<%= day.downcase %>-input.txt')
+  end
+
+  EXAMPLE_INPUT = <<~INPUT
+  INPUT
+end
+
+require 'minitest'
+
+class Test<%= day.capitalize %> < Minitest::Test
+end
+
+if ENV.key? 'TEST'
+  require 'minitest/autorun'
+else
+  <%= day.capitalize %>.go
+end

@@ -77,11 +77,10 @@ class SubDiagnostics
   def oxygen_generator_rating
     whittle = @report.dup
     (0..@num_digits-1).each do |position|
-      most_common_bit = bit_tally(whittle)[position].tap { |h|
-          h.delete("0") if h["0"] == h["1"]
-        }.max_by { |_bit, count| count }
-        .first
-      whittle.select! { |bits| bits[position] == most_common_bit }
+      bit_criteria = most_common_bit_at(whittle, position)
+      whittle.select! do |bits|
+        bits[position] == bit_criteria
+      end
       break if 1 == whittle.length
     end
     whittle
@@ -93,17 +92,30 @@ class SubDiagnostics
   def co2_scrubber_rating
     whittle = @report.dup
     (0..@num_digits-1).each do |position|
-      least_common_bit = bit_tally(whittle)[position].tap { |h|
-          h.delete("1") if h["0"] == h["1"]
-        }.min_by { |_bit, count| count }
-        .first
-      whittle.select! { |bits| bits[position] == least_common_bit }
+      bit_criteria = least_common_bit_at(whittle, position)
+      whittle.select! do |bits|
+        bits[position] == bit_criteria
+      end
       break if 1 == whittle.length
     end
     whittle
       .first
       .join("")
       .to_i(2)
+  end
+
+  def most_common_bit_at(input, position)
+    bit_tally(input)[position]
+      .tap { |t| t.delete("0") if t["0"] == t["1"]}
+      .max_by { |_bit, count| count }
+      .first
+  end
+
+  def least_common_bit_at(input, position)
+    bit_tally(input)[position]
+      .tap { |t| t.delete("1") if t["0"] == t["1"] }
+      .min_by { |_bit, count| count }
+      .first
   end
   
   def bit_tally(input)

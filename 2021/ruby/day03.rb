@@ -75,26 +75,19 @@ class SubDiagnostics
   end
 
   def oxygen_generator_rating
-    whittle = @report.dup
-    (0..@num_digits-1).each do |position|
-      bit_criteria = most_common_bit_at(whittle, position)
-      whittle.select! do |bits|
-        bits[position] == bit_criteria
-      end
-      break if 1 == whittle.length
-    end
-    whittle
-      .first
-      .join("")
-      .to_i(2)
+    rating_filter(method(:most_common_bit_at))
   end
 
   def co2_scrubber_rating
+    rating_filter(method(:least_common_bit_at))
+  end
+
+  def rating_filter(criteria_method)
     whittle = @report.dup
     (0..@num_digits-1).each do |position|
-      bit_criteria = least_common_bit_at(whittle, position)
+      bit_criterion = criteria_method.call(whittle, position)
       whittle.select! do |bits|
-        bits[position] == bit_criteria
+        bits[position] == bit_criterion
       end
       break if 1 == whittle.length
     end

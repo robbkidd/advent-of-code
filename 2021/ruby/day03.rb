@@ -65,9 +65,13 @@ class SubDiagnostics
 
   def popular_bits
     @popular_bits ||=
-      bit_tally(@report).map{ |tally|
-        tally.max_by {|_bit, count| count }.first
-      }.join("")
+      bit_tally(@report)
+        .map{ |tally|
+          tally
+            .max_by {|_bit, count| count }
+            .first
+        }
+        .join("")
   end
 
   def life_support_rating

@@ -11,6 +11,8 @@ class Day03
   end
 
   def part2
+    diag = SubDiagnostics.new(report)
+    diag.life_support_rating
   end
 
   def report
@@ -35,7 +37,15 @@ end
 
 class SubDiagnostics
   def initialize(report='')
-    @report = report.split("\n")
+    @report = report
+      .split("\n")
+      .map{ |line| line.chars }
+
+    if 1 == @report.map { |line| line.length }.uniq.length
+      @num_digits = @report.first.length
+    else
+      raise "Yea, these numbers don't seem to have the same length."
+    end
   end
 
   def power_consumption
@@ -54,23 +64,85 @@ class SubDiagnostics
   end
 
   def popular_bits
-    @popular_bits ||= @report
-      .map{ |line| line.chars }
+    @popular_bits ||= 
+      bit_tally(@report).map{ |tally| 
+        tally.max_by {|_bit, count| count }.first 
+      }.join("") 
+  end
+
+  def life_support_rating
+    oxygen_generator_rating * co2_scrubber_rating
+  end
+
+  def oxygen_generator_rating
+    whittle = @report.dup
+    (0..@num_digits-1).each do |position|
+      most_common_bit = bit_tally(whittle)[position].tap { |h|
+          h.delete("0") if h["0"] == h["1"]
+        }.max_by { |_bit, count| count }
+        .first
+      whittle.select! { |bits| bits[position] == most_common_bit }
+      break if 1 == whittle.length
+    end
+    whittle
+      .first
+      .join("")
+      .to_i(2)
+  end
+
+  def co2_scrubber_rating
+    whittle = @report.dup
+    (0..@num_digits-1).each do |position|
+      least_common_bit = bit_tally(whittle)[position].tap { |h|
+          h.delete("1") if h["0"] == h["1"]
+        }.min_by { |_bit, count| count }
+        .first
+      whittle.select! { |bits| bits[position] == least_common_bit }
+      break if 1 == whittle.length
+    end
+    whittle
+      .first
+      .join("")
+      .to_i(2)
+  end
+  
+  def bit_tally(input)
+    input
       .transpose
-      .map{ |position| position.tally }
-      .map{ |tally| tally.max_by {|_bit, count| count }.first }
-      .join("") 
+      .map{ |position| position.tally } 
   end
 end
 
 require 'minitest'
 
 class TestDay03 < Minitest::Test
-  def test_example_part1
-    diag = SubDiagnostics.new(Day03::EXAMPLE_INPUT)
-    assert_equal 22, diag.gamma_rate
-    assert_equal 9, diag.epsilon_rate
-    assert_equal 198, diag.power_consumption
+
+  def setup
+    @diag = SubDiagnostics.new(Day03::EXAMPLE_INPUT) 
+  end
+
+  def test_part1_gamma_rate
+    assert_equal 22, @diag.gamma_rate
+  end
+
+  def test_part1_epsilon_rate
+    assert_equal 9, @diag.epsilon_rate
+  end
+
+  def test_part1_power_consumption
+    assert_equal 198, @diag.power_consumption
+  end
+
+  def test_part2_oxygen_generator_rating
+    assert_equal 23, @diag.oxygen_generator_rating
+  end
+
+  def test_part2_co2_scrubber_rating
+    assert_equal 10, @diag.co2_scrubber_rating
+  end
+
+  def test_part2_life_support_rating
+    assert_equal 230, @diag.life_support_rating
   end
 end
 

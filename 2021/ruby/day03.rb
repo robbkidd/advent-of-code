@@ -64,10 +64,10 @@ class SubDiagnostics
   end
 
   def popular_bits
-    @popular_bits ||= 
-      bit_tally(@report).map{ |tally| 
-        tally.max_by {|_bit, count| count }.first 
-      }.join("") 
+    @popular_bits ||=
+      bit_tally(@report).map{ |tally|
+        tally.max_by {|_bit, count| count }.first
+      }.join("")
   end
 
   def life_support_rating
@@ -117,11 +117,11 @@ class SubDiagnostics
       .min_by { |_bit, count| count }
       .first
   end
-  
+
   def bit_tally(input)
     input
       .transpose
-      .map{ |position| position.tally } 
+      .map{ |position| position.tally }
   end
 end
 
@@ -130,7 +130,7 @@ require 'minitest'
 class TestDay03 < Minitest::Test
 
   def setup
-    @diag = SubDiagnostics.new(Day03::EXAMPLE_INPUT) 
+    @diag = SubDiagnostics.new(Day03::EXAMPLE_INPUT)
   end
 
   def test_part1_gamma_rate

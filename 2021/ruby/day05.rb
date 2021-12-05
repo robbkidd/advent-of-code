@@ -5,8 +5,12 @@ class Day05
     puts "Part 2: #{day.part2}"
   end
 
+  def initialize(data=nil)
+    @data = data || input
+  end
+
   def part1
-    parse(input)
+    parse
       .map{ |line| to_vent_line(line) }
       .flatten(1)
       .tally
@@ -15,12 +19,32 @@ class Day05
   end
 
   def part2
-    parse(input)
+    parse
       .map{ |line| to_vent_line(line, skip_diagonals: false) }
       .flatten(1)
       .tally
       .reject{ |coord, count| count < 2 }
       .length
+  end
+
+  def to_s
+    intersections = parse
+      .map{ |line| to_vent_line(line, skip_diagonals: false) }
+      .flatten(1)
+      .tally
+
+    bounds_x, bounds_y = intersections
+                          .keys
+                          .transpose
+                          .map(&:minmax)
+
+
+    Range.new(*bounds_y).map { |y|
+      Range.new(*bounds_x).map { |x|
+        intersections.fetch([x,y], ".")
+      }.join("")
+    }.join("\n")
+    .concat("\n")
   end
 
   def input
@@ -53,8 +77,8 @@ class Day05
     e1 > e2 ? e1.downto(e2).to_a : e1.upto(e2).to_a
   end
 
-  def parse(input)
-    input
+  def parse
+    @data
       .split("\n")
       .map{ |line|
         line.split(" -> ")
@@ -80,8 +104,8 @@ require 'minitest'
 
 class TestDay05 < Minitest::Test
   def test_parse_input
-    d = Day05.new
-    assert_equal [[0,9],[5,9]], d.parse(Day05::EXAMPLE_INPUT).first
+    d = Day05.new(Day05::EXAMPLE_INPUT)
+    assert_equal [[0,9],[5,9]], d.parse.first
   end
 
   def test_to_vent_line
@@ -92,6 +116,23 @@ class TestDay05 < Minitest::Test
   def test_other_line
     d = Day05.new
     assert_equal [[9, 7], [8, 7], [7, 7]], d.to_vent_line([[9,7],[7,7]])
+  end
+
+  def test_printing_the_grid
+    part2_example_diagram = <<~DIAGRAM
+      1.1....11.
+      .111...2..
+      ..2.1.111.
+      ...1.2.2..
+      .112313211
+      ...1.2....
+      ..1...1...
+      .1.....1..
+      1.......1.
+      222111....
+    DIAGRAM
+    d = Day05.new(Day05::EXAMPLE_INPUT)
+    assert_equal part2_example_diagram, d.to_s
   end
 end
 

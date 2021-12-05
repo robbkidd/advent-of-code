@@ -113,13 +113,21 @@ class Board
   end
 
   def match(number)
+    if won?
+      puts "Why are you still playing?"
+      return self
+    end
+
     tiles
       .each do |row|
         row.each do |tile|
           if tile.match?(number)
             @matches << number
             tile.mark
-            @won = true if is_a_winner?
+            if is_a_winner?
+              @won = true
+              return self
+            end
           end
         end
       end

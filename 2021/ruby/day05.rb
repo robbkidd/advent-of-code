@@ -31,20 +31,26 @@ class Day05
     start, finish = end_coords
     case
     when start[1] == finish[1]
-      xs = start[0] > finish[0] ? start[0].downto(finish[0]).to_a : start[0].upto(finish[0]).to_a
-      (xs).to_a.zip([start[1]] * xs.length)
+      xs = fill_a_dimension(start[0], finish[0])
+      ys = [start[1]] * xs.length
+      (xs).to_a.zip(ys)
     when start[0] == finish[0]
-      ys = start[1] > finish[1] ? start[1].downto(finish[1]).to_a : start[1].upto(finish[1]).to_a
-      ([start[0]] * ys.length).to_a.zip(ys)
+      ys = fill_a_dimension(start[1], finish[1])
+      xs = [start[0]] * ys.length
+      (xs).to_a.zip(ys)
     else
       if skip_diagonals
         []
       else
-        xs = start[0] > finish[0] ? start[0].downto(finish[0]).to_a : start[0].upto(finish[0]).to_a
-        ys = start[1] > finish[1] ? start[1].downto(finish[1]).to_a : start[1].upto(finish[1]).to_a
+        xs = fill_a_dimension(start[0], finish[0])
+        ys = fill_a_dimension(start[1], finish[1])
         xs.zip(ys)
       end
     end
+  end
+
+  def fill_a_dimension(e1, e2)
+    e1 > e2 ? e1.downto(e2).to_a : e1.upto(e2).to_a
   end
 
   def parse(input)

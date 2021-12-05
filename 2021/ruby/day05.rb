@@ -15,24 +15,35 @@ class Day05
   end
 
   def part2
+    parse(input)
+      .map{ |line| to_vent_line(line, skip_diagonals: false) }
+      .flatten(1)
+      .tally
+      .reject{ |coord, count| count < 2 }
+      .length
   end
 
   def input
     File.read('../inputs/day05-input.txt')
   end
 
-  def to_vent_line(end_coords)
+  def to_vent_line(end_coords, skip_diagonals: true)
     start, finish = end_coords
     case
     when start[1] == finish[1]
-      xs = Range.new(*[start[0],finish[0]].sort).to_a
+      xs = start[0] > finish[0] ? start[0].downto(finish[0]).to_a : start[0].upto(finish[0]).to_a
       (xs).to_a.zip([start[1]] * xs.length)
     when start[0] == finish[0]
-      ys = Range.new(*[start[1],finish[1]].sort).to_a
+      ys = start[1] > finish[1] ? start[1].downto(finish[1]).to_a : start[1].upto(finish[1]).to_a
       ([start[0]] * ys.length).to_a.zip(ys)
     else
-      puts "Diagonal. Skip it for part 1."
-      []
+      if skip_diagonals
+        []
+      else
+        xs = start[0] > finish[0] ? start[0].downto(finish[0]).to_a : start[0].upto(finish[0]).to_a
+        ys = start[1] > finish[1] ? start[1].downto(finish[1]).to_a : start[1].upto(finish[1]).to_a
+        xs.zip(ys)
+      end
     end
   end
 
@@ -74,7 +85,7 @@ class TestDay05 < Minitest::Test
 
   def test_other_line
     d = Day05.new
-    assert_equal [[7, 7], [8, 7], [9, 7]], d.to_vent_line([[9,7],[7,7]])
+    assert_equal [[9, 7], [8, 7], [7, 7]], d.to_vent_line([[9,7],[7,7]])
   end
 end
 

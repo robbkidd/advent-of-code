@@ -12,6 +12,9 @@ class Day04
   end
 
   def part2
+    bingo = BingoSubSystem.new(input)
+    tofurky_dinner = bingo.last_winning_board
+    tofurky_dinner.score
   end
 
   def input
@@ -58,9 +61,22 @@ class BingoSubSystem
     @drawn_numbers.each do |draw|
       @boards.each do |board|
         board.match(draw)
-        return board if board.is_a_winner?
+        return board if board.won?
       end
     end
+  end
+
+  def last_winning_board
+    winners = []
+    @drawn_numbers.each do |draw|
+      @boards.each do |board|
+        next if board.won?
+        board.match(draw)
+        winners << board if board.won?
+      end
+      break if winners.length == @boards.length
+    end
+    winners.last
   end
 end
 
@@ -70,6 +86,11 @@ class Board
   def initialize(input='')
     @tiles = parse(input)
     @matches = []
+    @won = false
+  end
+
+  def won?
+    @won
   end
 
   def score
@@ -91,11 +112,6 @@ class Board
       .concat("\n")
   end
 
-  def is_a_winner?
-    tiles.any? { |row| row.all? {|tile| tile.marked? } } ||
-    tiles.transpose.any? { |column| column.all? {|tile| tile.marked? } }
-  end
-
   def match(number)
     tiles
       .each do |row|
@@ -103,9 +119,15 @@ class Board
           if tile.match?(number)
             @matches << number
             tile.mark
+            @won = true if is_a_winner?
           end
         end
       end
+  end
+
+  def is_a_winner?
+    tiles.any? { |row| row.all? {|tile| tile.marked? } } ||
+    tiles.transpose.any? { |column| column.all? {|tile| tile.marked? } }
   end
 
   def parse(input='')
@@ -169,6 +191,12 @@ class TestDay04 < Minitest::Test
     assert_equal 4512, chicken_dinner.score
   end
 
+  def test_last_winning_board
+    bingo = BingoSubSystem.new(Day04::EXAMPLE_INPUT)
+    tofurky_dinner = bingo.last_winning_board
+    assert_equal 1924, tofurky_dinner.score
+  end
+
   def test_input_parsing
     bingo = BingoSubSystem.new(Day04::EXAMPLE_INPUT)
     assert_equal(
@@ -178,21 +206,21 @@ class TestDay04 < Minitest::Test
     # assert_equal "", d.boards
   end
 
-  def test_board_is_a_winner
+  def test_board_won?
     b = @third_example_board
     [14,10,18,22,2].each {|draw| b.match(draw)}
-    assert b.is_a_winner?
+    assert b.won?
   end
 
   def test_board_score
     b = @third_example_board
-    refute b.is_a_winner?
+    refute b.won?
     [7,4,9,5,11,17,23,2,0,14,21].each do |draw|
       b.match(draw)
-      refute b.is_a_winner?
+      refute b.won?
     end
     b.match(24)
-    assert b.is_a_winner?
+    assert b.won?
     assert_equal 4512, b.score
   end
 

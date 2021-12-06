@@ -118,6 +118,14 @@ class TestDay05 < Minitest::Test
     assert_equal [[9, 7], [8, 7], [7, 7]], d.to_vent_line([[9,7],[7,7]])
   end
 
+  def test_a_diagonal
+    d = Day05.new(Day05::EXAMPLE_INPUT)
+    assert_equal [], d.to_vent_line([[1,1],[3,3]])
+    assert_equal [], d.to_vent_line([[1,1],[3,3]], skip_diagonals: true)
+    assert_equal [[1,1], [2,2], [3,3]], d.to_vent_line([[1,1],[3,3]], skip_diagonals: false)
+    assert_equal [[9,7], [8,8], [7,9]], d.to_vent_line([[9,7],[7,9]], skip_diagonals: false)
+  end
+
   def test_printing_the_grid
     part2_example_diagram = <<~DIAGRAM
       1.1....11.

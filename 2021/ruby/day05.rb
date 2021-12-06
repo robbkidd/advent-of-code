@@ -9,6 +9,9 @@ class Day05
     @data = data || input
   end
 
+  # @example
+  #  new(EXAMPLE_INPUT).part1 #=> 5
+  #
   def part1
     parse
       .map{ |line| to_vent_line(line) }
@@ -18,6 +21,9 @@ class Day05
       .length
   end
 
+  # @example
+  #  new(EXAMPLE_INPUT).part2 #=> 12
+  #
   def part2
     parse
       .map{ |line| to_vent_line(line, skip_diagonals: false) }

@@ -105,6 +105,11 @@ class Day05
     end
   end
 
+  # @example upwards & downwards
+  #   d = Day05.new(Day05::EXAMPLE_INPUT)
+  #   d.fill_a_dimension(1, 3) #=> [1, 2, 3]
+  #   d.fill_a_dimension(9, 7) #=> [9, 8, 7]
+  #
   def fill_a_dimension(e1, e2)
     e1 > e2 ? e1.downto(e2).to_a : e1.upto(e2).to_a
   end

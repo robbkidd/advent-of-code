@@ -5,13 +5,17 @@ class <%= day.capitalize %>
     puts "Part 2: #{day.part2}"
   end
 
+  def initialize(input=nil)
+    @input = input || real_input
+  end
+
   def part1
   end
 
   def part2
   end
 
-  def input
+  def real_input
     File.read('../inputs/<%= day.downcase %>-input.txt')
   end
 

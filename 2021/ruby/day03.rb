@@ -5,17 +5,27 @@ class Day03
     puts "Part 2: #{day.part2}"
   end
 
+  def initialize(input=nil)
+    @input = input || real_input
+  end
+
+  # @example
+  #   new(EXAMPLE_INPUT).part1 #=> 198
+  #
   def part1
-    diag = SubDiagnostics.new(report)
+    diag = SubDiagnostics.new(@input)
     diag.power_consumption
   end
 
+  # @example
+  #   new(EXAMPLE_INPUT).part2 #=> 230
+  #
   def part2
-    diag = SubDiagnostics.new(report)
+    diag = SubDiagnostics.new(@input)
     diag.life_support_rating
   end
 
-  def report
+  def real_input
     File.read('../inputs/day03-input.txt')
   end
 
@@ -48,15 +58,27 @@ class SubDiagnostics
     end
   end
 
+  # @example
+  #   SubDiagnostics
+  #     .new(Day03::EXAMPLE_INPUT)
+  #     .power_consumption #=> 198
   def power_consumption
     gamma_rate * epsilon_rate
   end
 
+  # @example
+  #   SubDiagnostics
+  #     .new(Day03::EXAMPLE_INPUT)
+  #     .gamma_rate #=> 22
   def gamma_rate
     popular_bits
       .to_i(2)
   end
 
+  # @example
+  #   SubDiagnostics
+  #     .new(Day03::EXAMPLE_INPUT)
+  #     .epsilon_rate #=> 9
   def epsilon_rate
     popular_bits
       .tr('01', '10')
@@ -74,14 +96,26 @@ class SubDiagnostics
         .join("")
   end
 
+  # @example
+  #   SubDiagnostics
+  #     .new(Day03::EXAMPLE_INPUT)
+  #     .life_support_rating #=> 230
   def life_support_rating
     oxygen_generator_rating * co2_scrubber_rating
   end
 
+  # @example
+  #   SubDiagnostics
+  #     .new(Day03::EXAMPLE_INPUT)
+  #     .oxygen_generator_rating #=> 23
   def oxygen_generator_rating
     rating_filter(method(:most_common_bit_at))
   end
 
+  # @example
+  #   SubDiagnostics
+  #     .new(Day03::EXAMPLE_INPUT)
+  #     .co2_scrubber_rating #=> 10
   def co2_scrubber_rating
     rating_filter(method(:least_common_bit_at))
   end
@@ -120,43 +154,4 @@ class SubDiagnostics
       .transpose
       .map{ |position| position.tally }
   end
-end
-
-require 'minitest'
-
-class TestDay03 < Minitest::Test
-
-  def setup
-    @diag = SubDiagnostics.new(Day03::EXAMPLE_INPUT)
-  end
-
-  def test_part1_gamma_rate
-    assert_equal 22, @diag.gamma_rate
-  end
-
-  def test_part1_epsilon_rate
-    assert_equal 9, @diag.epsilon_rate
-  end
-
-  def test_part1_power_consumption
-    assert_equal 198, @diag.power_consumption
-  end
-
-  def test_part2_oxygen_generator_rating
-    assert_equal 23, @diag.oxygen_generator_rating
-  end
-
-  def test_part2_co2_scrubber_rating
-    assert_equal 10, @diag.co2_scrubber_rating
-  end
-
-  def test_part2_life_support_rating
-    assert_equal 230, @diag.life_support_rating
-  end
-end
-
-if ENV.key? 'TEST'
-  require 'minitest/autorun'
-else
-  Day03.go
 end

@@ -5,19 +5,29 @@ class Day04
     puts "Part 2: #{day.part2}"
   end
 
+  def initialize(input=nil)
+    @input = input || real_input
+  end
+
+  # @example
+  #   new(EXAMPLE_INPUT).part1 #=> 4512
+  #
   def part1
-    bingo = BingoSubSystem.new(input)
+    bingo = BingoSubSystem.new(@input)
     chicken_dinner = bingo.first_winning_board
     chicken_dinner.score
   end
 
+  # @example
+  #   new(EXAMPLE_INPUT).part2 #=> 1924
+  #
   def part2
-    bingo = BingoSubSystem.new(input)
+    bingo = BingoSubSystem.new(@input)
     tofurky_dinner = bingo.last_winning_board
     tofurky_dinner.score
   end
 
-  def input
+  def real_input
     File.read('../inputs/day04-input.txt')
   end
 
@@ -239,10 +249,4 @@ class TestDay04 < Minitest::Test
     tile.mark
     assert tile.marked?
   end
-end
-
-if ENV.key? 'TEST'
-  require 'minitest/autorun'
-else
-  Day04.go
 end

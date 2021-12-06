@@ -9,10 +9,18 @@ class Day01
     @sonar_sweep = input || sonar_sweep_report
   end
 
+  # @example part 1
+  #   d = Day01.new(PART1_EXAMPLE_INPUT)
+  #   d.part1 #=> 7
+  #
   def part1
     num_increases(@sonar_sweep)
   end
 
+  # @example part 2
+  #   d = Day01.new(PART1_EXAMPLE_INPUT)
+  #   d.part2 #=> 5
+  #
   def part2
     sliding_window_increases(@sonar_sweep)
   end
@@ -35,10 +43,7 @@ class Day01
   def sonar_sweep_report
     File.read('../inputs/day01-input.txt').split("\n").map(&:to_i)
   end
-end
 
-require 'minitest'
-class TestDay01 < Minitest::Test
   PART1_EXAMPLE_INPUT=[
     199,
     200,
@@ -51,22 +56,4 @@ class TestDay01 < Minitest::Test
     260,
     263,
   ]
-
-  def setup
-    @day01_example = Day01.new(PART1_EXAMPLE_INPUT)
-  end
-
-  def test_part1_example
-    assert_equal 7, @day01_example.part1
-  end
-
-  def test_part2_example
-    assert_equal 5, @day01_example.part2
-  end
-end
-
-if ENV.key? 'TEST'
-  require 'minitest/autorun'
-else
-  Day01.go
 end

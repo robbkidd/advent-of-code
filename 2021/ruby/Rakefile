@@ -25,7 +25,7 @@ task :test, [:day] do |t, args|
     file.write "require 'day#{day}'\n"
   end
 
-  abort unless system("yard doctest ./day#{day}.rb")
+  abort unless system("yard doctest -v ./day#{day}.rb")
 end
 
 task :new do

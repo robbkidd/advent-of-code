@@ -5,15 +5,25 @@ class Day02
     puts "Part 2: #{day.part2}"
   end
 
+  def initialize(input=nil)
+    @input = input || real_input
+  end
+
+  # @example answer
+  #   new(EXAMPLE_INPUT).part1 #=> 150
+  #
   def part1
     submarine = Sub.new
-    submarine.follow_instructions(planned_course)
+    submarine.follow_instructions(@input)
     submarine.where_you_at
   end
 
+  # @example answer
+  #   new(EXAMPLE_INPUT).part2 #=> 900
+  #
   def part2
     submarine = SlightlyMoreComplicatedSub.new
-    submarine.follow_instructions(planned_course)
+    submarine.follow_instructions(@input)
     submarine.where_you_at
   end
 
@@ -168,10 +178,4 @@ class TestSlightlyMoreComplicatedSub < Minitest::Test
     @test_sub.forward(8)
     assert_equal 40, @test_sub.depth
   end
-end
-
-if ENV.key? 'TEST'
-  require 'minitest/autorun'
-else
-  Day02.go
 end

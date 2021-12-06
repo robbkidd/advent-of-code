@@ -14,13 +14,18 @@ task :run, [:day] do |t, args|
   day = what_day(args[:day])
   puts "OK. Let's run Day#{day}!\n\n"
   require "./day#{day}"
+  Object.const_get("Day#{day}").go
 end
 
 task :test, [:day] do |t, args|
-  ENV['TEST'] = 'yup'
   day = what_day(args[:day])
   puts "Wooo! Let's test Day#{day}!\n\n"
-  require "./day#{day}"
+
+  File.open('./doctest_helper.rb', 'w') do |file|
+    file.write "require 'day#{day}'\n"
+  end
+
+  abort unless system("yard doctest ./day#{day}.rb")
 end
 
 task :new do

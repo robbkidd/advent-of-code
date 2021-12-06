@@ -18,14 +18,3 @@ class <%= day.capitalize %>
   EXAMPLE_INPUT = <<~INPUT
   INPUT
 end
-
-require 'minitest'
-
-class Test<%= day.capitalize %> < Minitest::Test
-end
-
-if ENV.key? 'TEST'
-  require 'minitest/autorun'
-else
-  <%= day.capitalize %>.go
-end

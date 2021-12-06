@@ -41,14 +41,14 @@ class Day05
     222111....
   DIAGRAM
 
-  # @example part 2 diagram
-  #   part2_example_diagram =
-  #   d = Day05.new(Day05::EXAMPLE_INPUT)
-  #   d.to_s #=> Day05::EXAMPLE_DIAGRAM
+  # @example diagram with diagonals
+  #   Day05
+  #     .new(EXAMPLE_INPUT)
+  #     .to_s(skip_diagonals: false) #=> Day05::EXAMPLE_DIAGRAM
   #
-  def to_s
+  def to_s(skip_diagonals: true)
     intersections = parse
-      .map{ |line| to_vent_line(line, skip_diagonals: false) }
+      .map{ |line| to_vent_line(line, skip_diagonals: skip_diagonals) }
       .flatten(1)
       .tally
 

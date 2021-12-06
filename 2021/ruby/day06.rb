@@ -85,7 +85,6 @@ class LanternFishSchool
 
     @school = @school.each_with_object(Hash.new(0)) { |fish, next_school|
       days, count = fish
-      # puts "days: #{days}, count: #{count}, next: #{next_school}"
       if days == 0
         next_school[6] += count
       else

@@ -54,7 +54,7 @@ class Day07
     @input
       .map { |i|
         d = (i - position).abs # distance
-        d != 0 ? 1.upto(d).reduce(&:+) : d # fuel_cost
+        d * (d+1) / 2 # fuel_cost
       }
       .reduce(&:+)
   end

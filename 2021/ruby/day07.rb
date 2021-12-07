@@ -3,6 +3,7 @@ class Day07
     day = new
     puts "Part 1: #{day.part1}"
     puts "Part 2: #{day.part2}"
+    puts "Bonus: #{day.easter_egg}"
   end
 
   def initialize(input=nil)
@@ -66,4 +67,11 @@ class Day07
   EXAMPLE_INPUT = <<~INPUT
     16,1,2,0,4,2,7,1,2,14
   INPUT
+
+  def easter_egg
+    require_relative '../../2019/ruby/lib/intcode'
+    🤖 = Intcode.new(program: real_input.chomp.split(",").map(&:to_i))
+    🤖.run
+    🤖.output.map(&:chr).join("")
+  end
 end

@@ -5,33 +5,22 @@ class Day06
     puts "Part 2: #{day.part2}"
   end
 
-  attr_reader :input
-
   def initialize(input=nil)
-    @input = input || real_input
+    @school = RecursiveLanternFishSchool.new(input || real_input)
   end
 
-  # @example 18 days
-  #   school = LanternFishSchool.new(EXAMPLE_INPUT)
-  #   18.times { school.a_day_passes }
-  #   school.size #=> 26
-  #
   # @example 80 days
   #   d = Day06.new(EXAMPLE_INPUT)
   #   d.part1 #=> 5934
   def part1
-    school = LanternFishSchool.new(input)
-    80.times { school.a_day_passes }
-    school.size
+    @school.size_on_day(80)
   end
 
   # @example 256 days
   #   d = Day06.new(EXAMPLE_INPUT)
   #   d.part2 #=> 26984457539
   def part2
-    school = LanternFishSchool.new(input)
-    256.times { school.a_day_passes }
-    school.size
+    @school.size_on_day(256)
   end
 
   def real_input
@@ -43,8 +32,33 @@ class Day06
   INPUT
 end
 
+class RecursiveLanternFishSchool
+  def initialize(list='')
+    @recursive_school = { 0 => list.chomp.split(",").map(&:to_i).tally }
+    @recursive_school.default_proc = proc do |hash, day|
+      hash[day] = hash[day-1].each_with_object(Hash.new(0)) do |fish, next_school|
+        days, count = fish
+        if days == 0
+          next_school[8] += count
+          next_school[6] += count
+        else
+          next_school[days-1] += count
+        end
+      end
+    end
+  end
+
+  # @example
+  #   s = RecursiveLanternFishSchool.new(Day06::EXAMPLE_INPUT)
+  #   s.size_on_day(18) #=> 26
+  #   s.size_on_day(80) #=> 5934
+  def size_on_day(day)
+    @recursive_school[day].values.reduce(&:+)
+  end
+end
+
 class LanternFishSchool
-  attr_reader :school, :size
+  attr_reader :school
 
   # @example
   #   LanternFishSchool
@@ -79,6 +93,16 @@ class LanternFishSchool
   #     .a_day_passes
   #     .a_day_passes
   #   s.school #=> [0,1,0,5,6,7,8].tally
+  #
+  # @example 80 days
+  #   s = LanternFishSchool.new(Day06::EXAMPLE_INPUT)
+  #   80.times { s.a_day_passes }
+  #   s.size #=> 5934
+  #
+  # @example 256 days
+  #   s = LanternFishSchool.new(Day06::EXAMPLE_INPUT)
+  #   256.times { s.a_day_passes }
+  #   s.size #=> 26984457539
   #
   def a_day_passes
     new_fish = @school[0]
@@ -127,6 +151,13 @@ class TestLanternFishSchool < Minitest::Test
       s = LanternFishSchool.new('3,4,3,1,2')
       days.times { s.a_day_passes }
       assert_equal school, s.school, "Day #{days} mismatch"
+    end
+  end
+
+  def test_recursive_size
+    s = RecursiveLanternFishSchool.new('3,4,3,1,2')
+    STATES.each do |days, school|
+      assert_equal school.values.reduce(&:+), s.size_on_day(days), "Day #{days} mismatch"
     end
   end
 end

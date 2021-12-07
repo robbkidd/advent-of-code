@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/robbkidd/aoc2021/input"
+	input "github.com/robbkidd/aoc2021/tools"
 	"github.com/stretchr/testify/assert"
 )
 

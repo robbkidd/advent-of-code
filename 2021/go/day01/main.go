@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/robbkidd/aoc2021/input"
+	input "github.com/robbkidd/aoc2021/tools"
 )
 
 func main() {

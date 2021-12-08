@@ -13,6 +13,11 @@ type IntcodeComputer struct {
 	status  string
 }
 
+func (c *IntcodeComputer) Load(program string) {
+	c.program = program
+	c.memory = programToMemory(c.program)
+}
+
 func (c *IntcodeComputer) Run() error {
 	c.pointer = 0
 	c.status = "running"

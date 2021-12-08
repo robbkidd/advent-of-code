@@ -62,6 +62,22 @@ func TestRun(t *testing.T) {
 		cpu.status,
 	)
 }
+
+func TestLoadAndRun(t *testing.T) {
+	cpu := new(IntcodeComputer)
+	cpu.Load("1,1,1,4,99,5,6,0,99")
+	run_err := cpu.Run()
+	assert.Nil(t, run_err)
+	assert.Equal(t,
+		[]int{30, 1, 1, 4, 2, 5, 6, 0, 99},
+		cpu.memory,
+	)
+	assert.Equal(t,
+		"halted",
+		cpu.status,
+	)
+}
+
 func TestAddition(t *testing.T) {
 	cpu := new(IntcodeComputer)
 	cpu.memory = []int{1, 0, 0, 0, 99}

@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// An intcode computer for Advent of Code 2019 challenges
 type IntcodeComputer struct {
 	program string
 	memory  []int
@@ -13,11 +14,14 @@ type IntcodeComputer struct {
 	status  string
 }
 
+// Load an intcode program (a string of comma-separated integers)
+// into a computer's memory space
 func (c *IntcodeComputer) Load(program string) {
 	c.program = program
 	c.memory = programToMemory(c.program)
 }
 
+// Write a given value to an address location in memory
 func (c *IntcodeComputer) Hack(address int, value int) error {
 	if 0 <= address && address < len(c.memory) {
 		c.memory[address] = value
@@ -27,6 +31,7 @@ func (c *IntcodeComputer) Hack(address int, value int) error {
 	}
 }
 
+// Start the computer up!
 func (c *IntcodeComputer) Run() error {
 	c.pointer = 0
 	c.status = "running"
@@ -47,6 +52,7 @@ func (c *IntcodeComputer) Run() error {
 	return fmt.Errorf("pointer is out of memory bounds")
 }
 
+// Read a value from an address in the computer's memory
 func (c *IntcodeComputer) Read(address int) (int, error) {
 	if 0 <= address && address < len(c.memory) {
 		return c.memory[address], nil

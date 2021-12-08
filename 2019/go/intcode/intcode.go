@@ -18,6 +18,15 @@ func (c *IntcodeComputer) Load(program string) {
 	c.memory = programToMemory(c.program)
 }
 
+func (c *IntcodeComputer) Hack(position int, value int) error {
+	if 0 <= position && position < len(c.memory) {
+		c.memory[position] = value
+		return nil
+	} else {
+		return fmt.Errorf("memory hack out of bounds ⛔️")
+	}
+}
+
 func (c *IntcodeComputer) Run() error {
 	c.pointer = 0
 	c.status = "running"
@@ -36,6 +45,14 @@ func (c *IntcodeComputer) Run() error {
 		}
 	}
 	return fmt.Errorf("pointer is out of memory bounds")
+}
+
+func (c *IntcodeComputer) Read(position int) (int, error) {
+	if 0 <= position && position < len(c.memory) {
+		return c.memory[position], nil
+	} else {
+		return -1, fmt.Errorf("memory read out of bounds ⛔️")
+	}
 }
 
 func (c *IntcodeComputer) add() {

@@ -58,3 +58,14 @@ func TestAddition(t *testing.T) {
 		cpu.memory,
 	)
 }
+
+func TestMultiplication(t *testing.T) {
+	cpu := new(IntcodeComputer)
+	cpu.memory = []int{2, 3, 0, 3, 99}
+	cpu.pointer = 0
+	cpu.multiply()
+	assert.Equal(t,
+		[]int{2, 3, 0, 6, 99},
+		cpu.memory,
+	)
+}

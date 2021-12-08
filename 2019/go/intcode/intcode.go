@@ -18,9 +18,9 @@ func (c *IntcodeComputer) Load(program string) {
 	c.memory = programToMemory(c.program)
 }
 
-func (c *IntcodeComputer) Hack(position int, value int) error {
-	if 0 <= position && position < len(c.memory) {
-		c.memory[position] = value
+func (c *IntcodeComputer) Hack(address int, value int) error {
+	if 0 <= address && address < len(c.memory) {
+		c.memory[address] = value
 		return nil
 	} else {
 		return fmt.Errorf("memory hack out of bounds ⛔️")
@@ -47,29 +47,27 @@ func (c *IntcodeComputer) Run() error {
 	return fmt.Errorf("pointer is out of memory bounds")
 }
 
-func (c *IntcodeComputer) Read(position int) (int, error) {
-	if 0 <= position && position < len(c.memory) {
-		return c.memory[position], nil
+func (c *IntcodeComputer) Read(address int) (int, error) {
+	if 0 <= address && address < len(c.memory) {
+		return c.memory[address], nil
 	} else {
 		return -1, fmt.Errorf("memory read out of bounds ⛔️")
 	}
 }
 
 func (c *IntcodeComputer) add() {
-	params := c.memory[c.pointer+1 : c.pointer+3+1]
-	input1_pos := params[0]
-	input2_pos := params[1]
-	output_pos := params[2]
-	c.memory[output_pos] = c.memory[input1_pos] + c.memory[input2_pos]
+	in1_address := c.memory[c.pointer+1]
+	in2_address := c.memory[c.pointer+2]
+	out_address := c.memory[c.pointer+3]
+	c.memory[out_address] = c.memory[in1_address] + c.memory[in2_address]
 	c.pointer += 4
 }
 
 func (c *IntcodeComputer) multiply() {
-	params := c.memory[c.pointer+1 : c.pointer+3+1]
-	input1_pos := params[0]
-	input2_pos := params[1]
-	output_pos := params[2]
-	c.memory[output_pos] = c.memory[input1_pos] * c.memory[input2_pos]
+	in1_address := c.memory[c.pointer+1]
+	in2_address := c.memory[c.pointer+2]
+	out_address := c.memory[c.pointer+3]
+	c.memory[out_address] = c.memory[in1_address] * c.memory[in2_address]
 	c.pointer += 4
 }
 

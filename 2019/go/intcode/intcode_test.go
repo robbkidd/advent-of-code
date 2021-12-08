@@ -47,3 +47,14 @@ func TestProgramToMemory(t *testing.T) {
 		})
 	}
 }
+
+func TestAddition(t *testing.T) {
+	cpu := new(IntcodeComputer)
+	cpu.memory = []int{1, 0, 0, 0, 99}
+	cpu.pointer = 0
+	cpu.add()
+	assert.Equal(t,
+		[]int{2, 0, 0, 0, 99},
+		cpu.memory,
+	)
+}

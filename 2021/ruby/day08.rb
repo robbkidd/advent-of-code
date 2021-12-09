@@ -105,61 +105,32 @@ class WireMap
 
   # @example
   #   wire_map = WireMap.new(%w[acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab])
-  #   wire_map.map_wires #=> {"ab"=>1, "abd"=>7, "abef"=>4, "abcdefg"=>8, "abcdef"=>9, "abcdeg"=>0, "bcdefg"=>6, "bcdef"=>5, "abcdf"=>3, "acdfg"=>2}
+  #   wire_map.map_wires #=> {"abcdeg"=>0, "ab"=>1, "acdfg"=>2, "abcdf"=>3, "abef"=>4, "bcdef"=>5, "bcdefg"=>6, "abd"=>7, "abcdefg"=>8, "abcdef"=>9}
   def map_wires
-    decoded = {}
+    signals_by_length = signals
+      .map(&:chars)
+      .group_by {|s| s.length }
 
-    signal_chars = signals.map(&:chars)
+    decoded = {
+      1 => signals_by_length[2].first,
+      4 => signals_by_length[4].first,
+      7 => signals_by_length[3].first,
+      8 => signals_by_length[7].first,
+    }
 
-    decoded[1] = signal_chars.select{|s| s.length == 2}.first
-    signal_chars.delete(decoded[1])
+    decoded[2],
+    decoded[5],
+    decoded[3] = signals_by_length[5]
+                  .sort_by{|s| [s.intersection(decoded[1]).length, s.intersection(decoded[4]).length]}
 
-    decoded[7] = signal_chars.select{|s| s.length == 3}.first
-    signal_chars.delete(decoded[7])
-
-    decoded[4] = signal_chars.select{|s| s.length == 4}.first
-    signal_chars.delete(decoded[4])
-
-    decoded[8] = signal_chars.select{|s| s.length == 7}.first
-    signal_chars.delete(decoded[8])
-
-    aaaa = decoded[7] - decoded[1]
-    bbbb_dddd = decoded[4] - decoded[1]
-
-    decoded[9] = signal_chars
-      .select{|s| s.length == 6 }
-      .select{|s| (s & (decoded[7] + bbbb_dddd)).length == 5 }
-      .first
-    signal_chars.delete(decoded[9])
-
-    gggg = decoded[9] - (decoded[7] + bbbb_dddd)
-
-    decoded[0] = signal_chars
-      .select{|s| s.length == 6 }
-      .select {|s| ((decoded[8] - s) & decoded[1]).length == 0 }
-      .first
-    signal_chars.delete(decoded[0])
-
-    decoded[6] = signal_chars.select{|s| s.length == 6 }.first
-    signal_chars.delete(decoded[6])
-
-    decoded[5] = signal_chars
-      .select {|s| (decoded[6] - s).length == 1 }
-      .first
-    signal_chars.delete(decoded[5])
-
-    eeee = decoded[6] - decoded[5]
-
-    decoded[3] = signal_chars
-      .select{|s| (s & decoded[7]).length == 3 }
-      .first
-    signal_chars.delete(decoded[3])
-
-    decoded[2] = signal_chars.first
+    decoded[6],
+    decoded[0],
+    decoded[9] = signals_by_length[6]
+                  .sort_by{|s| [s.intersection(decoded[1]).length, s.intersection(decoded[4]).length]}
 
     decoded
       .map{ |digit, signal|
-        [signal.sort.join(""), digit]
+        [signal.sort.join, digit]
       }
       .to_h
   end

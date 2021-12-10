@@ -1,10 +1,11 @@
 require 'set'
+
 class Day09
   def self.go
     day = new
     puts "Part 1: #{day.part1}"
     puts "Part 2: #{day.part2}"
-    day.display_heightmap(:basins)
+    day.display_heightmap(:rainbow)
   end
 
   attr_reader :input, :depths, :row_bounds, :column_bounds
@@ -150,14 +151,29 @@ class Day09
           else
             print "\e[35m#{depth}\e[0m"
           end
+        when :rainbow
+            print RAINBOWIZE.fetch(depth)
         else
-          puts "I don't know how to print #{type}."
+          raise "I don't know how to print #{type}."
         end
       end
       puts
     end
     puts
   end
+
+  RAINBOWIZE = {
+    0 => "\e[30m0\e[0m",
+    1 => "\e[35m1\e[0m",
+    2 => "\e[31m2\e[0m",
+    3 => "\e[34m3\e[0m",
+    4 => "\e[32m4\e[0m",
+    5 => "\e[36m5\e[0m",
+    6 => "\e[37m6\e[0m",
+    7 => "\e[33m7\e[0m",
+    8 => "\e[33m8\e[0m",
+    9 => "\e[1m\e[35m\e[45m9\e[0m"
+  }
 
   def real_input
     File.read('../inputs/day09-input.txt')

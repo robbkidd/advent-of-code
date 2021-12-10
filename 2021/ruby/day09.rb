@@ -47,8 +47,7 @@ class Day09
   def survey_basin(location)
     basin = Set.new.add(location)
     survey = [location]
-    while !survey.empty?
-      check_loc = survey.pop
+    while check_loc = survey.pop
       if depths[check_loc] != 9
         adjacent_locations(check_loc)
           .reject { |neighbor| depths[neighbor] == :out_of_bounds }

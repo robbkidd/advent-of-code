@@ -4,6 +4,7 @@ class Day09
     day = new
     puts "Part 1: #{day.part1}"
     puts "Part 2: #{day.part2}"
+    day.display_heightmap(:basins)
   end
 
   attr_reader :input, :depths, :row_bounds, :column_bounds
@@ -135,18 +136,19 @@ class Day09
     puts
     @row_bounds.each do |row|
       @column_bounds.each do |column|
+        depth = depths[[row,column]]
         case type
         when :lowest_points
           if lowest_points.keys.include?([row,column])
-            print "\e[7m#{depths[[row,column]]}\e[0m"
+            print "\e[7m#{depth}\e[0m"
           else
-            print depths[[row,column]]
+            print depth
           end
         when :basins
           if basins.map{|b| b.include? [row,column]}.any?
-            print "\e[7m#{depths[[row,column]]}\e[0m"
+            print "\e[7m#{depth}\e[0m"
           else
-            print depths[[row,column]]
+            print "\e[35m#{depth}\e[0m"
           end
         else
           puts "I don't know how to print #{type}."

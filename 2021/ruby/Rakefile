@@ -22,7 +22,13 @@ task :test, [:day] do |t, args|
   puts "Wooo! Let's test Day#{day}!\n\n"
 
   File.open('./doctest_helper.rb', 'w') do |file|
-    file.write "require 'day#{day}'\n"
+    file.write <<~TEST_HELPER
+      require 'day#{day}'
+
+      def day
+        @day ||= Day#{day}.new(Day#{day}::EXAMPLE_INPUT)
+      end
+    TEST_HELPER
   end
 
   abort unless system("yard doctest -v ./day#{day}.rb")

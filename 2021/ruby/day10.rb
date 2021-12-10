@@ -18,7 +18,7 @@ class Day10
       .split("\n")
       .map { |line| analyze_line(line) }
       .filter { |result, _char| :corrupted == result }
-      .map { |_result, char| CLOSERS[char][:points] }
+      .map { |_result, char| CLOSERS[char][:corruption_points] }
       .reduce(&:+)
   end
 
@@ -27,10 +27,10 @@ class Day10
 
   # ~Coffee~ Points are for closers.
   CLOSERS = {
-    ')' => {opener: '(', points: 3},
-    ']' => {opener: '[', points: 57},
-    '}' => {opener: '{', points: 1197},
-    '>' => {opener: '<', points: 25137},
+    ')' => {opener: '(', corruption_points: 3},
+    ']' => {opener: '[', corruption_points: 57},
+    '}' => {opener: '{', corruption_points: 1197},
+    '>' => {opener: '<', corruption_points: 25137},
   }
   OPENERS = CLOSERS.values.map{|c| c[:opener]}
 

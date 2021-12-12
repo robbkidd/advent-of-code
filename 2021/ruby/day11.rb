@@ -29,7 +29,15 @@ class Day11
       .reduce(&:+)
   end
 
+  # @example
+  #   day.part2 #=> 195
   def part2
+    steps = 0
+    until @octopodes_step_states[steps].values.uniq == [0] do
+      step
+      steps += 1
+    end
+    steps
   end
 
   def step

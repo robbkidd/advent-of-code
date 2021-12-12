@@ -6,7 +6,11 @@ def what_day(arg=nil)
   if arg
     arg
   else
-    Time.now.day
+    if day = ENV.fetch("DAY")
+      day
+    else
+      Time.now.day
+    end
   end.to_s.rjust(2, '0')
 end
 

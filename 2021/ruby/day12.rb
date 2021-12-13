@@ -21,7 +21,14 @@ class Day12
       .count
   end
 
+  # @example
+  #   day.part2 #=> 36
   def part2
+    CaveSystem
+      .new(input)
+      .build_a_rough_map
+      .find_paths_with_one_small_revisit
+      .count
   end
 
   def parse(input)
@@ -45,6 +52,45 @@ class Day12
     A-end
     b-end
   INPUT
+
+  EXAMPLE_PATHS_PART2 = [
+    "start,A,b,A,b,A,c,A,end",
+    "start,A,b,A,b,A,end",
+    "start,A,b,A,b,end",
+    "start,A,b,A,c,A,b,A,end",
+    "start,A,b,A,c,A,b,end",
+    "start,A,b,A,c,A,c,A,end",
+    "start,A,b,A,c,A,end",
+    "start,A,b,A,end",
+    "start,A,b,d,b,A,c,A,end",
+    "start,A,b,d,b,A,end",
+    "start,A,b,d,b,end",
+    "start,A,b,end",
+    "start,A,c,A,b,A,b,A,end",
+    "start,A,c,A,b,A,b,end",
+    "start,A,c,A,b,A,c,A,end",
+    "start,A,c,A,b,A,end",
+    "start,A,c,A,b,d,b,A,end",
+    "start,A,c,A,b,d,b,end",
+    "start,A,c,A,b,end",
+    "start,A,c,A,c,A,b,A,end",
+    "start,A,c,A,c,A,b,end",
+    "start,A,c,A,c,A,end",
+    "start,A,c,A,end",
+    "start,A,end",
+    "start,b,A,b,A,c,A,end",
+    "start,b,A,b,A,end",
+    "start,b,A,b,end",
+    "start,b,A,c,A,b,A,end",
+    "start,b,A,c,A,b,end",
+    "start,b,A,c,A,c,A,end",
+    "start,b,A,c,A,end",
+    "start,b,A,end",
+    "start,b,d,b,A,c,A,end",
+    "start,b,d,b,A,end",
+    "start,b,d,b,end",
+    "start,b,end",
+  ]
 
   SLIGHTLY_LARGER_EXAMPLE_INPUT = <<~INPUT
     dc-end
@@ -137,6 +183,33 @@ class CaveSystem
             path.count(next_cave) < next_cave.allowed_visits
           end
           .each { |visitable_cave|
+            trial_paths.push(path + [caves[visitable_cave.name]])
+          }
+      end
+    end
+
+    paths_to_the_end
+  end
+
+  def find_paths_with_one_small_revisit
+    paths_to_the_end = []
+    trial_paths = [[caves['start']]]
+
+    while path = trial_paths.pop do
+      if path.last.end?
+        paths_to_the_end.push(path)
+        next
+      else
+        path
+          .last
+          .connections
+          .map { |next_cave_name|
+            @caves[next_cave_name]
+          }
+          .filter do |next_cave|
+            next_cave.can_visit?(path)
+          end
+          .each { |visitable_cave|
             trial_paths.push(path + [visitable_cave])
           }
       end
@@ -153,6 +226,10 @@ class Cave
     @name = name
     @big = (name.upcase == name)
     @connections = []
+  end
+
+  def ==(other)
+    self.name == other.name
   end
 
   # @example
@@ -175,12 +252,34 @@ class Cave
     @connections << other
   end
 
-  def allowed_visits
+  def allowed_visits(one_small_revisit: false, caves_visited: [])
     case
     when start? ; 0
     when small? ; 1
     when end?   ; 1
     else ; Float::INFINITY
+    end
+  end
+
+  # @example
+  #   start = Cave.new('start')
+  #   A = Cave.new('A')
+  #   b = Cave.new('b')
+  #   c = Cave.new('c')
+  #   path = [start, A, b, A, b, A, c, A]
+  #   path.include?(c) #=> true
+  #   c.can_visit?(path) #=> false
+  def can_visit?(visited)
+    case
+    when self.start? ; false
+    when self.small?
+      smalls_visited_tally = visited.filter(&:small?).tally
+      no_visits_to_me_yet = !visited.include?(self)
+      no_other_revisited_smalls = smalls_visited_tally.values.count(2) < 1
+      not_too_many_visits_for_me = visited.count(self) < 2
+
+      no_visits_to_me_yet || (no_other_revisited_smalls && not_too_many_visits_for_me)
+    else ; true
     end
   end
 
@@ -220,13 +319,53 @@ class Cave
   end
 
   def to_s
-    case
-    when start?
-      "\e[32m#{name}\e[0m"
-    when end?
-      "\e[31m#{name}\e[0m"
-    else
+    # case
+    # when start?
+    #   "\e[32m#{name}\e[0m"
+    # when end?
+    #   "\e[31m#{name}\e[0m"
+    # else
       name
-    end
+    # end
   end
+end
+
+require 'minitest'
+
+class TestCaveSystem < Minitest::Test
+  def test_part2_example
+    day = Day12.new(Day12::EXAMPLE_INPUT)
+    cs = CaveSystem.new(day.input)
+    cs.build_a_rough_map
+    paths = cs.find_paths_with_one_small_revisit
+    assert_equal(
+      Day12::EXAMPLE_PATHS_PART2.sort.join("\n"),
+      paths.map{|p| p.join(",")}.sort.join("\n")
+    )
+    assert_equal 36, paths.count
+  end
+
+  def test_part2_slightly_larger
+    day = Day12.new(Day12::SLIGHTLY_LARGER_EXAMPLE_INPUT)
+    cs = CaveSystem.new(day.input)
+    cs.build_a_rough_map
+    paths = cs.find_paths_with_one_small_revisit
+    # assert_equal(
+    #   Day12::EXAMPLE_PATHS_PART2.sort.join("\n"),
+    #   paths.map{|p| p.join(",")}.sort.join("\n")
+    # )
+    assert_equal 103, paths.count
+  end
+
+  # def test_part2_even_larger
+  #   day = Day12.new(Day12::EVEN_LARGER_EXAMPLE_INPUT)
+  #   cs = CaveSystem.new(day.input)
+  #   cs.build_a_rough_map
+  #   paths = cs.find_paths_with_one_small_revisit
+  #   # assert_equal(
+  #   #   Day12::EXAMPLE_PATHS_PART2.sort.join("\n"),
+  #   #   paths.map{|p| p.join(",")}.sort.join("\n")
+  #   # )
+  #   assert_equal 3509, paths.count
+  # end
 end

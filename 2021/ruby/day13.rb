@@ -4,7 +4,7 @@ class Day13
   def self.go
     day = new
     puts "Part 1: #{day.part1}"
-    puts "Part 2: #{day.part2}"
+    puts "Part 2: \n#{day.part2}"
   end
 
   attr_reader :input_dots, :input_folds, :papers, :fold_instructions
@@ -29,7 +29,13 @@ class Day13
     @papers.first.fold(@fold_instructions.first).dots.count
   end
 
+  # @example
+  #   day.part2 #=> Day13::EXAMPLE_FOLDED
   def part2
+    @fold_instructions.each do |instruction|
+      @papers << @papers.last.fold(instruction)
+    end
+    @papers.last.to_s
   end
 
   def parse_input(input)
@@ -85,14 +91,12 @@ class Day13
     #.#........
   DOTS
 
-  EXAMPLE_FIRST_FOLD = <<~DOTS
-    #.##..#..#.
-    #...#......
-    ......#...#
-    #...#......
-    .#.#..#.###
-    ...........
-    ...........
+  EXAMPLE_FOLDED = <<~DOTS
+    #####
+    #...#
+    #...#
+    #...#
+    #####
   DOTS
 end
 

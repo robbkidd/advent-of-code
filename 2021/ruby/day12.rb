@@ -194,14 +194,34 @@ class Cave
     @connections << other
   end
 
-  # @example
+  # @example can visit a small once
+  #   start = Cave.new('start')
+  #   A = Cave.new('A')
+  #   b = Cave.new('b')
+  #   c = Cave.new('c')
+  #   path = [start, A, b, A]
+  #   c.can_visit?(path) #=> true
+  # @example can revisit a small once with revisit permission
+  #   start = Cave.new('start')
+  #   A = Cave.new('A')
+  #   b = Cave.new('b')
+  #   c = Cave.new('c')
+  #   path = [start, A, b, A, c, A]
+  #   c.can_visit?(path, true) #=> true
+  # @example cannot revisit a small without revisit permission
+  #   start = Cave.new('start')
+  #   A = Cave.new('A')
+  #   b = Cave.new('b')
+  #   c = Cave.new('c')
+  #   path = [start, A, b, A, c, A]
+  #   c.can_visit?(path) #=> false
+  # @example cannot revisit a small with revisit permission if another small has been visited
   #   start = Cave.new('start')
   #   A = Cave.new('A')
   #   b = Cave.new('b')
   #   c = Cave.new('c')
   #   path = [start, A, b, A, b, A, c, A]
-  #   path.include?(c) #=> true
-  #   c.can_visit?(path) #=> false
+  #   c.can_visit?(path, true) #=> false
   def can_visit?(visited, one_small_revisit=false)
     case
     when self.start? ; false

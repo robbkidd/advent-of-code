@@ -33,14 +33,13 @@ class Day13
     @fold_instructions.each do |instruction|
       @papers << @papers.last.fold(instruction)
     end
-    @papers.last.to_s
+    ENV['FANCY'] ? ugly_christmas_sweater(@papers.last.to_s) : @papers.last.to_s
   end
 
-  def parse_input(input)
-    paper, instructions = input.split("\n\n")
-
-    @folds = instructions
-
+  def ugly_christmas_sweater(output)
+    output
+      .gsub(/#/, "\e[41m\e[1m#\e[0m")
+      .gsub(/\./, "\e[32m.\e[0m")
   end
 
   def real_input
@@ -117,6 +116,10 @@ class FoldInstruction
     end
   end
 
+  # @example
+  #   fold = FoldInstruction.new("y","7")
+  #   fold.fold_up([0,0]) #=> [0,0]
+  #   fold.fold_up([14,0]) #=> [0,0]
   def fold_up(dot)
     x, y = dot
     diff = x - line_number
@@ -127,6 +130,10 @@ class FoldInstruction
     end
   end
 
+  # @example
+  #   fold = FoldInstruction.new("x","5")
+  #   fold.fold_left([4,0]) #=> [4,0]
+  #   fold.fold_left([4,10]) #=> [4,0]
   def fold_left(dot)
     x, y = dot
     diff = y - line_number

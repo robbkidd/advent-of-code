@@ -1,5 +1,3 @@
-require 'set'
-
 class Day13
   def self.go
     day = new
@@ -111,6 +109,34 @@ class FoldInstruction
     @line_number = line_number.to_i
   end
 
+  def fold(dot)
+    case axis
+    when "x" ; fold_up(dot)
+    when "y" ; fold_left(dot)
+    else ; raise "That's a weird axis you've got there. #{instruction}"
+    end
+  end
+
+  def fold_up(dot)
+    x, y = dot
+    diff = x - line_number
+    case
+    when diff > 0 ; [line_number - diff, y]
+    when diff < 0 ; dot
+    else ; raise "That's a dot on a fold? #{self}"
+    end
+  end
+
+  def fold_left(dot)
+    x, y = dot
+    diff = y - line_number
+    case
+    when diff > 0 ; [x, line_number - diff]
+    when diff < 0 ; dot
+    else ; raise "That's a dot on a fold? #{instruction}"
+    end
+  end
+
   def to_s
     "#{axis}: #{line_number}"
   end
@@ -139,38 +165,11 @@ class Paper
   end
 
   def fold(instruction)
-    new_dots = Set.new
-    dots.each do |dot|
-      case instruction.axis
-      when "x"
-        diff = dot[0] - instruction.line_number
-        case
-        when diff > 0
-          # fold the dot
-          new_dots.add([instruction.line_number - diff, dot[1]])
-        when diff < 0
-          # keep the dot
-          new_dots.add(dot)
-        else
-          puts "That's a dot on a fold? #{instruction}"
-        end
-      when "y"
-        diff = dot[1] - instruction.line_number
-        case
-        when diff > 0
-          # fold the dot
-          new_dots.add([dot[0], instruction.line_number - diff])
-        when diff < 0
-          # keep the dot
-          new_dots.add(dot)
-        else
-          puts "That's a dot on a fold? #{instruction}"
-        end
-      else
-        raise "That's a weird axis you've got there. #{instruction}"
-      end
-    end
-    Paper.new(new_dots.to_a)
+    Paper.new(
+      dots
+        .map { |dot| instruction.fold(dot) }
+        .uniq
+    )
   end
 
   def to_s

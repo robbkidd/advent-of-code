@@ -24,7 +24,7 @@ class Day14
   end
 
   # @example
-  #   day.part2 #=> 2188189693529
+  #   day.part2 #=> 2_188_189_693_529
   def part2
     polymer = Polymer.new(*@input.split("\n\n"))
     40.times { polymer.insert }
@@ -35,9 +35,6 @@ class Day14
       .sort
       .reverse
       .reduce(&:-)
-  end
-
-  def parse_input
   end
 
   def real_input
@@ -96,13 +93,12 @@ class Polymer
   #   4.times { p.insert }
   #   p.pairs #=> 'NBBNBNBBCCNBCNCCNBBNBBNBBBNBBNBBCBHCBHHNHCBBCBHCB'.chars.each_cons(2).tally
   def insert
-    new_pairs = Hash.new(0)
-    @pairs.each do |pair, count|
+    @pairs = @pairs
+      .each_with_object(Hash.new(0)) do |(pair, count), new_pairs|
         insertion = @rules[pair]
         new_pairs[[pair.first, insertion]] += count
         new_pairs[[insertion, pair.last]] += count
     end
-    @pairs = new_pairs
   end
 
   # @example 10 step element count

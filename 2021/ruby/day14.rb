@@ -23,7 +23,18 @@ class Day14
       .reduce(&:-)
   end
 
+  # @example
+  #   day.part2 #=> 2188189693529
   def part2
+    polymer = Polymer.new(*@input.split("\n\n"))
+    40.times { polymer.insert }
+    polymer
+      .element_tally
+      .minmax_by { |_element, count| count }
+      .map { |_element, count| count }
+      .sort
+      .reverse
+      .reduce(&:-)
   end
 
   def parse_input

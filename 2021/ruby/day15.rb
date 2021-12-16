@@ -5,13 +5,10 @@ class Day15
     puts "Part 2: #{day.part2}"
   end
 
-  attr_reader :cave, :start, :goal, :row_bounds, :column_bounds
+  attr_reader :cave, :row_bounds, :column_bounds
 
   # @example
   #   day.cave.fetch([0,0]) #=> 1
-  #   day.row_bounds #=> 0..9
-  #   day.goal #=> [9,9]
-  #   day.cave.fetch(day.goal) #=> 1
   def initialize(input=nil)
     @cave = {}
     (input || real_input)
@@ -28,15 +25,15 @@ class Day15
       .keys
       .transpose
       .map{ |dimension| Range.new(*dimension.minmax) }
-
-    @start = [0,0]
-    @goal = [@row_bounds.max, @column_bounds.max]
   end
 
   # @example
   #   day.part1 #=> 40
   def part1
-    shortest_path = path(edsger_do_your_thing)
+    start = [0,0]
+    goal = [@row_bounds.max, @column_bounds.max]
+    steps = edsger_do_your_thing(cave, start, goal)
+    shortest_path = path(steps, goal)
     puts
     puts highlight_path(shortest_path)
 
@@ -48,7 +45,7 @@ class Day15
   def part2
   end
 
-  def path(backsteps)
+  def path(backsteps, goal)
     path = [goal]
     step_backwards = backsteps[goal]
     while step_backwards do
@@ -58,7 +55,7 @@ class Day15
     path
   end
 
-  def edsger_do_your_thing
+  def edsger_do_your_thing(grid, start, goal)
     backsteps = { start => nil }
     costs = { start => 0 }
     costs.default = Float::INFINITY

@@ -7,109 +7,34 @@ class Day15
 
   attr_reader :cave, :row_bounds, :column_bounds
 
-  # @example
-  #   day.cave.fetch([0,0]) #=> 1
   def initialize(input=nil)
-    @cave = Hash.new(:out_of_bounds)
-    (input || real_input)
-      .split("\n")
-      .map{|row| row.chars.map(&:to_i)}
-      .each_with_index { |row, r|
-        row.each_with_index{ |risk_level, c|
-          @cave[[r,c]] = risk_level
-        }
-      }
-
-    @row_bounds,
-    @column_bounds = @cave
-      .keys
-      .transpose
-      .map{ |dimension| Range.new(*dimension.minmax) }
+    @cave = RiskMap.new(input || real_input)
   end
 
   # @example
   #   day.part1 #=> 40
   def part1
-    start = [0,0]
-    goal = [@row_bounds.max, @column_bounds.max]
-    steps = edsger_do_your_thing(cave, start, goal)
-    shortest_path = path(steps, goal)
+    shortest_path = @cave.shortest_path_to_goal
     puts
-    puts grid_to_s(cave, shortest_path, highlight: true)
+    puts @cave.to_s(highlight_path: shortest_path)
 
     shortest_path[0..-2]
       .map{ |position| cave[position] }
       .reduce(&:+)
   end
 
-  def part2
-  end
-
-  def path(backsteps, goal)
-    path = [goal]
-    step_backwards = backsteps[goal]
-    while step_backwards do
-      path.push(step_backwards)
-      step_backwards = backsteps[step_backwards]
-    end
-    path
-  end
-
-  def edsger_do_your_thing(grid, start, goal)
-    backsteps = { start => nil }
-    costs = { start => 0 }
-    costs.default = Float::INFINITY
-
-    survey_queue = [[0,start]]
-    while (_cost, check_pos = survey_queue.pop) do
-      break if check_pos == goal
-
-      adjacent_positions(check_pos).map { |neighbor_pos|
-        [ neighbor_pos, grid[neighbor_pos] ]
-      }
-      .filter { |_neighbor_pos, neighbor_risk|
-        neighbor_risk != :out_of_bounds
-      }
-      .each do |neighbor_pos, neighbor_risk|
-        neighbor_cost = costs[check_pos] + neighbor_risk
-        if neighbor_cost < costs[neighbor_pos]
-          costs[neighbor_pos] = neighbor_cost
-          backsteps[neighbor_pos] = check_pos
-
-          survey_queue.push([neighbor_cost, neighbor_pos])
-          survey_queue
-            .sort_by! { |cost, _pos| cost }
-            .reverse!
-        end
-      end
-    end
-    backsteps
-  end
-
-  def grid_to_s(grid, path, highlight: true)
-    row_bounds.map { |r|
-      column_bounds.map { |c|
-        if path.include?([r,c])
-          highlight ? "\e[41m\e[1m#{grid[[r,c]]}\e[0m" : grid[[r,c]].to_s
-        else
-          highlight ? "\e[32m#{grid[[r,c]]}\e[0m" : cave[[r,c]].to_s
-        end
-      }.join
-    }.join("\n")
-    .concat("\n")
-  end
-
-  NEIGHBOR_OFFSETS = [[-1, 0],[1, 0],[0, -1],[0, 1]]
   # @example
-  #   day.adjacent_positions([0,0]) #=> [[-1, 0], [1, 0], [0, -1], [0, 1]]
-  #   day.adjacent_positions([5,42]) #=> [[4, 42], [6, 42], [5, 41], [5, 43]]
-  def adjacent_positions(position)
-    NEIGHBOR_OFFSETS
-      .map { |offset|
-        position
-          .zip(offset)
-          .map {|p| p.reduce(&:+)}
-      }
+  #   day.part2 #=> 315
+  def part2
+    embiggened_cave = RiskMap.new(@cave.grid).embiggen
+    shortest_path = embiggened_cave.shortest_path_to_goal
+    # don't print this bigger map; it's a doozy
+    # puts
+    # puts embiggened_cave.to_s(highlight_path: shortest_path)
+
+    shortest_path[0..-2]
+      .map{ |position| embiggened_cave[position] }
+      .reduce(&:+)
   end
 
   def real_input
@@ -181,4 +106,169 @@ class Day15
     56475739656758684176786979528789718163989182927419
     67554889357866599146897761125791887223681299833479
   EMBIGGENED
+end
+
+class RiskMap
+
+  attr_reader :start, :goal, :grid
+
+  # @example parsing part 1
+  #   cave = RiskMap.new(Day15::EXAMPLE_INPUT)
+  #   cave.to_s #=> Day15::EXAMPLE_INPUT
+  # @example can be dupped
+  #   cave = RiskMap.new(Day15::EXAMPLE_INPUT)
+  #   other_cave = RiskMap.new(cave.grid)
+  #   other_cave.to_s #=> Day15::EXAMPLE_INPUT
+  def initialize(input)
+    case input
+    when String
+      @grid = Hash.new { |(r,c)| :out_of_bounds }
+      parse_input_string(input)
+    when Hash
+      @grid = input.dup
+    end
+
+    @row_bounds,
+    @column_bounds = @grid
+      .keys
+      .transpose
+      .map{ |dimension| Range.new(*dimension.minmax) }
+
+    @tile_row_length = @row_bounds.count
+    @tile_column_length = @column_bounds.count
+
+    @start = [0,0]
+    @goal = [@row_bounds.max, @column_bounds.max]
+  end
+
+  def [](key)
+    grid[key]
+  end
+
+  # @example expected goal
+  #   cave = RiskMap.new(Day15::EXAMPLE_INPUT)
+  #   bigger_cave = RiskMap.new(cave.grid).embiggen
+  #   bigger_cave[bigger_cave.goal] #=> 9
+  # @example grid matches
+  #   cave = RiskMap.new(Day15::EXAMPLE_INPUT)
+  #   bigger_cave = RiskMap.new(cave.grid).embiggen
+  #   bigger_cave.to_s.split("\n").first #=> Day15::EMBIGGENED_EXAMPLE.split("\n").first
+  # @example out of bounds works
+  #   cave = RiskMap.new(Day15::EXAMPLE_INPUT)
+  #   bigger_cave = RiskMap.new(cave.grid).embiggen
+  #   bigger_cave[[1000,1000]] #=> :out_of_bounds
+  # @example tiling 0,10
+  #   cave = RiskMap.new(Day15::EXAMPLE_INPUT)
+  #   bigger_cave = RiskMap.new(cave.grid).embiggen
+  #   bigger_cave[[0,10]] #=> 2
+  # @example tiling 1,2
+  #   cave = RiskMap.new(Day15::EXAMPLE_INPUT)
+  #   bigger_cave = RiskMap.new(cave.grid).embiggen
+  #   bigger_cave[[1,2]] #=> 8
+  # @example tiling 11,12
+  #   cave = RiskMap.new(Day15::EXAMPLE_INPUT)
+  #   bigger_cave = RiskMap.new(cave.grid).embiggen
+  #   bigger_cave[[11,12]] #=> 1
+  def embiggen
+    mult = 5
+    # _lengths_ are +1 higher than the end of the _range_
+    # so exclude from the new _range_ the end computed from the previous _length_
+    @row_bounds = Range.new(0, (@tile_row_length * mult), exclude_end: true)
+    @column_bounds = Range.new(0, (@tile_column_length * mult), exclude_end: true)
+    @goal = [@row_bounds.max, @column_bounds.max]
+
+    @grid.default_proc = ->(h, (r,c)) {
+      if @row_bounds.cover?(r) && @column_bounds.cover?(c)
+        ref_pos = [ (r % @tile_row_length), (c % @tile_column_length) ]
+        ref_risk = h[ref_pos]
+
+        h[[r,c]] = maybe_mod_nine(ref_risk + r/@tile_row_length + c/@tile_column_length)
+      else
+        :out_of_bounds
+      end
+    }
+
+    self
+  end
+
+  def maybe_mod_nine(n)
+    n > 9 ? n%9 : n
+  end
+
+  def shortest_path_to_goal
+    backsteps = { start => nil }
+    costs = { start => 0 }
+    costs.default = Float::INFINITY
+
+    survey_queue = [[0,start]]
+    while (_cost, check_pos = survey_queue.pop) do
+      break if check_pos == goal
+
+      adjacent_positions(check_pos).map { |neighbor_pos|
+        [ neighbor_pos, grid[neighbor_pos] ]
+      }
+      .filter { |_neighbor_pos, neighbor_risk|
+        neighbor_risk != :out_of_bounds
+      }
+      .each do |neighbor_pos, neighbor_risk|
+        neighbor_cost = costs[check_pos] + neighbor_risk
+        if neighbor_cost < costs[neighbor_pos]
+          costs[neighbor_pos] = neighbor_cost
+          backsteps[neighbor_pos] = check_pos
+
+          survey_queue.push([neighbor_cost, neighbor_pos])
+          survey_queue
+            .sort_by! { |cost, _pos| cost }
+            .reverse!
+        end
+      end
+    end
+
+    path = [goal]
+    step_backwards = backsteps[goal]
+    while step_backwards do
+      path.push(step_backwards)
+      step_backwards = backsteps[step_backwards]
+    end
+    path
+  end
+
+  def adjacent_positions(position)
+    [[-1, 0],[1, 0],[0, -1],[0, 1]]
+      .map { |offset|
+        position
+          .zip(offset)
+          .map {|p| p.reduce(&:+)}
+      }
+  end
+
+  def parse_input_string(str='')
+    str
+      .split("\n")
+      .map{|row| row.chars.map(&:to_i)}
+      .each_with_index { |row, r|
+        row.each_with_index{ |risk_level, c|
+          @grid[[r,c]] = risk_level
+        }
+      }
+  end
+
+  def to_s(highlight_path: [])
+    highlight = !highlight_path.empty?
+    @row_bounds.map { |r|
+      @column_bounds.map { |c|
+        if highlight_path.include?([r,c])
+          highlight ? "\e[41m\e[1m#{grid[[r,c]]}\e[0m" : grid[[r,c]].to_s
+        else
+          if highlight
+            "\e[32m#{grid[[r,c]]}\e[0m"
+              .prepend(((r/@tile_row_length).even? ^ (c/@tile_column_length).even?) ? "\e[1m" : "")
+          else
+            grid[[r,c]].to_s
+          end
+        end
+      }.join
+    }.join("\n")
+    .concat("\n")
+  end
 end

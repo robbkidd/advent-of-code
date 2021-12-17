@@ -109,6 +109,7 @@ class Day15
 end
 
 class RiskMap
+  require "fc"
 
   attr_reader :start, :goal, :grid
 
@@ -200,8 +201,9 @@ class RiskMap
     costs = { start => 0 }
     costs.default = Float::INFINITY
 
-    survey_queue = [[0,start]]
-    while (_cost, check_pos = survey_queue.pop) do
+    survey_queue = FastContainers::PriorityQueue.new(:min)
+    survey_queue.push(start, 0)
+    while (check_pos = survey_queue.pop) do
       break if check_pos == goal
 
       adjacent_positions(check_pos).map { |neighbor_pos|
@@ -216,10 +218,8 @@ class RiskMap
           costs[neighbor_pos] = neighbor_cost
           backsteps[neighbor_pos] = check_pos
 
-          survey_queue.push([neighbor_cost, neighbor_pos])
-          survey_queue
-            .sort_by! { |cost, _pos| cost }
-            .reverse!
+          weight = neighbor_cost
+          survey_queue.push(neighbor_pos, weight)
         end
       end
     end
@@ -240,6 +240,13 @@ class RiskMap
           .zip(offset)
           .map {|p| p.reduce(&:+)}
       }
+  end
+
+  def manhattan_distance(here, there)
+    [here,there]
+      .transpose
+      .map { |a,b| (a-b).abs }
+      .reduce(&:+)
   end
 
   def parse_input_string(str='')

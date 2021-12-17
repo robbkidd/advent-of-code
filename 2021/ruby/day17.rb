@@ -141,30 +141,7 @@ class Probe
     @max_height ||= arc.map(&:last).max
   end
 
-  # @example 7,2
-  #   probe = Probe.new([7,2], day.target_area)
-  #   probe.arc #=> [[0, 0], [7, 2], [13, 3], [18, 3], [22, 2], [25, 0], [27, -3], [28, -7]]
-  #   probe.hit? #=> true
-  # @example 17,-4 (miss)
-  #   probe = Probe.new([17,-4], day.target_area)
-  #   probe.hit? #=> false
-  def launch
-    vx, vy = launch_velocity
-    arc = []
-    x, y = [0, 0]
 
-    until over_shot?([x,y]) || past_the_floor?([x,y]) do
-      arc.push([x,y])
-
-      x += vx
-      y += vy
-
-      vx -= (vx > 0 ? 1 : 0)
-      vy -= 1
-    end
-
-    @arc = arc
-  end
 
   # @example
   #   probe = Probe.new([7,2], day.target_area)
@@ -223,6 +200,31 @@ class Probe
   end
 
   private
+
+  # @example 7,2
+  #   probe = Probe.new([7,2], day.target_area)
+  #   probe.arc #=> [[0, 0], [7, 2], [13, 3], [18, 3], [22, 2], [25, 0], [27, -3], [28, -7]]
+  #   probe.hit? #=> true
+  # @example 17,-4 (miss)
+  #   probe = Probe.new([17,-4], day.target_area)
+  #   probe.hit? #=> false
+  def launch
+    vx, vy = launch_velocity
+    arc = []
+    x, y = [0, 0]
+
+    until over_shot?([x,y]) || past_the_floor?([x,y]) do
+      arc.push([x,y])
+
+      x += vx
+      y += vy
+
+      vx -= (vx > 0 ? 1 : 0)
+      vy -= 1
+    end
+
+    @arc = arc
+  end
 
   def in_target_area?(coord)
     @target[:x].cover?(coord.first) && @target[:y].cover?(coord.last)

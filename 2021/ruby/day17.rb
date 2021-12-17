@@ -5,11 +5,8 @@ class Day17
     puts "Part 2: #{day.part2}"
   end
 
-  attr_reader :target_area
-
   def initialize(input=nil)
     @input = input || real_input
-    parse_input
   end
 
   # @example
@@ -45,10 +42,9 @@ class Day17
   end
 
   # @example
-  #  day.parse_input
   #  day.target_area #=> {x: (20..30), y: (-10..-5)}
   def parse_input
-    @target_area =
+    @target_area ||=
       @input
         .chomp
         .match(/x=(?<x>.*), y=(?<y>.*)$/)
@@ -60,6 +56,7 @@ class Day17
           ]
         }.to_h
   end
+  alias_method :target_area, :parse_input
 
   def real_input
     File.read('../inputs/day17-input.txt')

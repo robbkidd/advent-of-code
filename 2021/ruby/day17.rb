@@ -153,7 +153,7 @@ class Probe
     arc = []
     x, y = [0, 0]
 
-    while !over_shot?([x,y]) && !past_the_floor?([x,y]) do
+    until over_shot?([x,y]) || past_the_floor?([x,y]) do
       arc.push([x,y])
 
       x += vx

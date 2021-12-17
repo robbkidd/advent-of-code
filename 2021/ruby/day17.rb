@@ -15,22 +15,33 @@ class Day17
   # @example
   #   day.part1 #=> 45
   def part1
-    (0..target_area[:x].max)
-      .filter {|vx| (vx * (vx+1))/2 >= target_area[:x].min }
-      .flat_map { |test_vx|
-        test_y_start = target_area[:y].min
-        test_y_end = (target_area[:y].max.abs + target_area[:y].min.abs)
-        (test_y_start..test_y_end).map {|test_vy|
-          velocity = [test_vx, test_vy]
-          Probe.new(velocity, target_area)
-        }
-      }
-      .filter{ |probe| probe.hit? }
+    probes_that_hit
       .max_by { |probe| probe.max_height }
       .max_height
   end
 
+  # @example
+  #   day.part2 #=> 112
   def part2
+    probes_that_hit
+      .map(&:launch_velocity) # excessive uniqueness check
+      .uniq                   # because AoC Paranoia™
+      .count
+  end
+
+  def probes_that_hit
+    @winners ||=
+      (0..target_area[:x].max)
+        .filter {|vx| (vx * (vx+1))/2 >= target_area[:x].min }
+        .flat_map { |test_vx|
+          test_y_start = target_area[:y].min
+          test_y_end = (target_area[:y].max.abs + target_area[:y].min.abs)
+          (test_y_start..test_y_end).map {|test_vy|
+            velocity = [test_vx, test_vy]
+            Probe.new(velocity, target_area)
+          }
+        }
+        .filter{ |probe| probe.hit? }
   end
 
   # @example

@@ -11,9 +11,6 @@ class Day20
     @input = input || real_input
     @input_image = Hash.new(DARK_PIXEL)
     parse_input
-
-    @infinite_odd_default = @image_enhancement_algorithm.at("000000000".to_i(2))
-    @infinite_even_default = @image_enhancement_algorithm.at("111111111".to_i(2))
   end
 
   # @example
@@ -31,6 +28,8 @@ class Day20
       .count
   end
 
+  # @example
+  #   day.part2 #=> 3351
   def part2
     output_image =
       50.times
@@ -47,7 +46,14 @@ class Day20
 
   def enhance(image, iteration=1)
     x_bounds, y_bounds = image_bounds(image)
-    image.default = iteration.even? ? @infinite_even_default : @infinite_odd_default
+
+    image.default =
+      case @image_enhancement_algorithm[0]
+      when DARK_PIXEL
+        DARK_PIXEL
+      when LIGHT_PIXEL
+        iteration.even? ? @image_enhancement_algorithm.at(0b111111111) : LIGHT_PIXEL
+      end
 
     enlarged_x_bounds = Range.new(x_bounds.min-1, x_bounds.max+1)
     enhanced_image = Hash.new

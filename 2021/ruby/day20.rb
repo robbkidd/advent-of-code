@@ -55,7 +55,6 @@ class Day20
         iteration.even? ? @image_enhancement_algorithm.at(0b111111111) : LIGHT_PIXEL
       end
 
-    enlarged_x_bounds = Range.new(x_bounds.min-1, x_bounds.max+1)
     enhanced_image = Hash.new
 
     y_bounds.map { |y|
@@ -72,7 +71,7 @@ class Day20
       .keys
       .transpose
       .map{ |dimension| dimension.minmax }
-      .map{ |min, max| Range.new(min-2, max+2) }
+      .map{ |min, max| Range.new(min-1, max+1) }
   end
 
   # @example

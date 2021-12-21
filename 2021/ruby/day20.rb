@@ -11,42 +11,62 @@ class Day20
     @input = input || real_input
     @input_image = Hash.new(DARK_PIXEL)
     parse_input
+
+    @infinite_odd_default = @image_enhancement_algorithm.at("000000000".to_i(2))
+    @infinite_even_default = @image_enhancement_algorithm.at("111111111".to_i(2))
   end
 
   # @example
   #   day.part1 #=> 35
   def part1
-    output_image = @input_image
+    output_image =
+      2.times
+        .inject(@input_image.dup) {|img, n|
+          puts ugly_christmas_sweater(display_image(img))
+          enhance(img, n)
+        }
     puts ugly_christmas_sweater(display_image(output_image))
-    2.times do
-      output_image = enhance(output_image)
-      puts ugly_christmas_sweater(display_image(output_image))
-    end
-    output_image.keys.count
+    output_image
+      .filter{ |_coord, pixel| pixel == LIGHT_PIXEL }
+      .count
   end
 
   def part2
+    output_image =
+      50.times
+        .inject(@input_image.dup) {|img, n|
+          enhance(img, n)
+        }
+    output_image
+      .filter{ |_coord, pixel| pixel == LIGHT_PIXEL }
+      .count
   end
 
   LIGHT_PIXEL = "#".freeze
   DARK_PIXEL = ".".freeze
 
-  # @example
-  #   one_round = day.enhance(day.input_image)
-  #   day.display_image(one_round) #=> EXAMPLE_ONE_ENHANCEMENT
-  def enhance(image)
-    row_bounds, column_bounds = image_bounds(image)
+  def enhance(image, iteration=1)
+    x_bounds, y_bounds = image_bounds(image)
+    image.default = iteration.even? ? @infinite_even_default : @infinite_odd_default
 
-    enhanced_image = Hash.new(DARK_PIXEL)
+    enlarged_x_bounds = Range.new(x_bounds.min-1, x_bounds.max+1)
+    enhanced_image = Hash.new
 
-    column_bounds.map { |c|
-      row_bounds.map { |r|
-        new_pixel = convert_pixel([c,r], image)
-        enhanced_image[[c,r]] = new_pixel if new_pixel == LIGHT_PIXEL
+    y_bounds.map { |y|
+      x_bounds.map { |x|
+        enhanced_image[[x,y]] = convert_pixel([x,y], image)
       }
     }
 
     enhanced_image
+  end
+
+  def image_bounds(image)
+    image
+      .keys
+      .transpose
+      .map{ |dimension| dimension.minmax }
+      .map{ |min, max| Range.new(min-2, max+2) }
   end
 
   # @example
@@ -80,7 +100,8 @@ class Day20
   end
 
   def display_image(image)
-    x_bounds, y_bounds = image_bounds(image)
+    x_bounds,
+    y_bounds = image_bounds(image)
 
     y_bounds.map { |y|
       x_bounds.map { |x|
@@ -96,21 +117,12 @@ class Day20
       .gsub(/\./, "\e[32m.\e[0m")
   end
 
-  # @example
-  #   two_dots_img = {[-10,-20] => "#", [100,200] => "#"}
-  #   day.image_bounds(two_dots_img) #=> [(-14..104), (-24..204)]
-  def image_bounds(image)
-    image
-      .keys
-      .transpose
-      .map{ |dimension| dimension.minmax }
-      .map{ |min, max| Range.new(min-4, max+4) }
-  end
+
 
   # @example
   #   day.parse_input
   #   day.image_enhancement_algorithm.join #=> Day20::EXAMPLE_INPUT.split("\n\n")[0]
-  #   day.input_image #=> {[0, 0]=>"#", [3, 0]=>"#", [0, 1]=>"#", [0, 2]=>"#", [1, 2]=>"#", [4, 2]=>"#", [2, 3]=>"#", [2, 4]=>"#", [3, 4]=>"#", [4, 4]=>"#"}
+  #   day.image_enhancement_algorithm.count #=> 512
   def parse_input
     algorithm, image = @input.split("\n\n")
 
@@ -121,7 +133,7 @@ class Day20
       .map{|row| row.chars}
       .each_with_index{ |row, y|
         row.each_with_index{ |pixel, x|
-          @input_image[[x,y]] = pixel if LIGHT_PIXEL == pixel
+          @input_image[[x,y]] = pixel
         }
       }
   end

@@ -25,7 +25,7 @@ class Day21
         players[1].take_turn(die)
       end
 
-      break if players.any? { |p| p.score >= 1000 }
+      break if players.any? { |p| p.win? }
     end
 
     loser = players.min_by { |p| p.score }
@@ -61,6 +61,10 @@ class DiracPlayer
     @name = name
     @pawn = starting_space
     @score = 0
+  end
+
+  def win?
+    score >= 1000
   end
 
   # @example

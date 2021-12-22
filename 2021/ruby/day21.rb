@@ -94,15 +94,9 @@ end
 class DeterministicDie
   attr_reader :times_rolled, :faces
 
-  # @example
-  #   die = DeterministicDie.new
-  #   die.faces.first #=> 1
-  #   die.faces.last #=> 100
-  #   die.faces.length #=> 100
-  def initialize(how_many_sides=100)
-    @ptr = -1
+  def initialize(sides=100)
     @times_rolled = 0
-    @faces = (1..how_many_sides).to_a.freeze
+    @faces = (1..sides).cycle
   end
 
   # @example rollin'
@@ -116,7 +110,6 @@ class DeterministicDie
   #   die.times_rolled #=> 102
   def roll
     @times_rolled += 1
-    @ptr = @ptr < 99 ? @ptr += 1 : 0
-    @faces[@ptr]
+    @faces.next
   end
 end

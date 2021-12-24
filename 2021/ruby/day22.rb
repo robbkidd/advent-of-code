@@ -26,7 +26,7 @@ class Day22
       .each do |step|
         reactor.follow(step)
       end
-    reactor.audit(:on)
+    reactor.audit
   end
 
   # @example
@@ -39,7 +39,7 @@ class Day22
       .each do |step|
         reactor.follow(step)
       end
-    reactor.audit(:on)
+    reactor.audit
   end
 
   def real_input
@@ -142,91 +142,97 @@ class Day22
   PART2
 end
 
-class CuboidReactor
-  attr_reader :cubes
-
-  INITIALIZATION_PROCEDURE_AREA = {
-    x_range: (-50..50),
-    y_range: (-50..50),
-    z_range: (-50..50),
-  }
-
-  def initialize
-    @cubes = Hash.new(:off)
-  end
-
-  def actual_boot
-    @the_whole_enchilada = true
-  end
-
-  def audit(state=:on)
-    @cubes.filter { |_, power| power == state }.count
-  end
-
-  # @example
-  #   reactor = CuboidReactor.new
-  #   step = RebootStep.new("on x=10..12,y=10..12,z=10..12")
-  #   reactor.follow(step)
-  #   reactor.cubes.filter {|_, state| state == :on }.count #=> 27
-  # @example ignores steps outside the initialization area
-  #   reactor = CuboidReactor.new
-  #   step = RebootStep.new("on x=-54112..-39298,y=-85059..-49293,z=-27449..7877")
-  #   reactor.follow(step)
-  #   reactor.cubes.filter {|_, state| state == :on }.count #=> 0
-  def follow(reboot_step)
-    if @the_whole_enchilada || within_initialization_procedure_area?(reboot_step)
-      reboot_step
-        .cuboid
-        .each { |cube|
-          @cubes[cube] = reboot_step.power
-        }
-    else
-      # outside the cube
-    end
-  end
-
-  def within_initialization_procedure_area?(reboot_step)
-    INITIALIZATION_PROCEDURE_AREA[:x_range].cover?(reboot_step.x_range) &&
-    INITIALIZATION_PROCEDURE_AREA[:y_range].cover?(reboot_step.y_range) &&
-    INITIALIZATION_PROCEDURE_AREA[:z_range].cover?(reboot_step.z_range)
-  end
-end
-
 class RebootStep
 
-  attr_reader :power, :x_range, :y_range, :z_range
+  attr_reader :power, :x_range, :y_range, :z_range, :cuboid
 
   # @example
   #   step = RebootStep.new("on x=10..12,y=10..12,z=10..12")
   #   step.power #=> :on
-  #   step.x_range #=> (10..12)
-  #   step.y_range #=> (10..12)
-  #   step.z_range #=> (10..12)
+  #   step.cuboid #=> Cuboid.new(10..12,10..12,10..12)
   def initialize(line)
-    power, ranges = line.split(" ")
+    /(\w+) x=(.+),y=(.+),z=(.+)$/ =~ line
 
-    @power = power.to_sym
+    @power = $1.to_sym
+    @cuboid = Cuboid.new(*[$2,$3,$4].map{|range| eval(range)})
+  end
+end
 
-    ranges
-      .split(",")
-      .map { |dim| dim.split("=") }
-      .each { |dim, range|
-        instance_variable_set("@#{dim}_range".to_sym, eval(range)) # eval is still evil
-      }
+class Range
+  def &(other)
+      lower, upper = self.minmax
+      other_lower, other_upper = other.minmax
+      Range.new(
+        [lower, other_lower].max,
+        [upper, other_upper].min
+      )
+  end
+
+  def empty?
+    size.zero?
+  end
+end
+
+class Cuboid
+  attr_reader :x_range, :y_range, :z_range
+
+  def initialize(x_range, y_range, z_range)
+    @x_range = x_range
+    @y_range = y_range
+    @z_range = z_range
   end
 
   # @example
-  #   step = RebootStep.new("on x=10..12,y=10..12,z=10..12")
-  #   step.cuboid #=> RebootStep::SAMPLE_CUBOID
-  def cuboid
-    @cuboid ||=
-      x_range.map { |x|
-        y_range.map { |y|
-          z_range.map { |z|
-            [x, y, z]
-          }
+  #   c1 = Cuboid.new(10..12,10..12,10..12)
+  #   c2 = Cuboid.new(11..13,11..13,11..13)
+  #   c1 & c2 #=> Cuboid.new(11..12,11..12,11..12)
+  def &(other)
+    intersection =
+      [:x_range, :y_range, :z_range].map {|range|
+        self.send(range) & other.send(range)
+      }
+
+    Cuboid.new(*intersection) unless intersection.any?(&:empty?)
+  end
+
+  def cover?(other)
+    [:x_range, :y_range, :z_range]
+      .map {|range|
+        self.send(range).cover?(other.send(range))
+      }
+      .all?
+  end
+
+  def ==(other)
+    [:x_range, :y_range, :z_range]
+      .map {|range|
+        self.send(range) == other.send(range)
+      }
+      .all?
+  end
+
+  # @example
+  #   c = Cuboid.new(10..12,10..12,10..12)
+  #   c.volume #=> 27
+  def volume
+    [@x_range, @y_range, @z_range]
+      .map(&:size)
+      .reduce(&:*)
+  end
+
+  # I hope to not need this in part 2.
+  #
+  # @example
+  #   c = Cuboid.new(10..12,10..12,10..12)
+  #   c.to_a #=> Cuboid::SAMPLE_CUBOID
+  def to_a
+    x_range.map { |x|
+      y_range.map { |y|
+        z_range.map { |z|
+          [x, y, z]
         }
-      }.flatten(2)
+      }
+    }.flatten(2)
   end
 
   SAMPLE_CUBOID = [
@@ -260,4 +266,48 @@ class RebootStep
   ]
 end
 
+class CuboidReactor
+  attr_reader :cubes
 
+  INITIALIZATION_PROCEDURE_AREA =
+    Cuboid.new((-50..50),(-50..50),(-50..50))
+
+  def initialize
+    @pos = []
+    @neg = []
+  end
+
+  def actual_boot
+    @the_whole_enchilada = true
+  end
+
+  def audit
+    @pos.sum(&:volume) - @neg.sum(&:volume)
+  end
+
+  # @example
+  #   reactor = CuboidReactor.new
+  #   step = RebootStep.new("on x=10..12,y=10..12,z=10..12")
+  #   reactor.follow(step)
+  #   reactor.audit #=> 27
+  # @example ignores steps outside the initialization area
+  #   reactor = CuboidReactor.new
+  #   step = RebootStep.new("on x=-54112..-39298,y=-85059..-49293,z=-27449..7877")
+  #   reactor.follow(step)
+  #   reactor.audit #=> 0
+  def follow(reboot_step)
+    if @the_whole_enchilada || within_initialization_procedure_area?(reboot_step)
+      p = @neg.map { _1 & reboot_step.cuboid }.compact
+      n = @pos.map { _1 & reboot_step.cuboid }.compact
+      @pos.concat(p)
+      @neg.concat(n)
+      @pos << reboot_step.cuboid if reboot_step.power == :on
+    else
+      # outside the cube
+    end
+  end
+
+  def within_initialization_procedure_area?(reboot_step)
+    INITIALIZATION_PROCEDURE_AREA.cover?(reboot_step.cuboid)
+  end
+end

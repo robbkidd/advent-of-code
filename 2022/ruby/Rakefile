@@ -1,0 +1,62 @@
+require 'erb'
+
+task :default => :test
+
+def what_day(arg=nil)
+  if arg
+    arg
+  else
+    if day = ENV.fetch("DAY", nil)
+      day
+    else
+      Time.now.day
+    end
+  end.to_s.rjust(2, '0')
+end
+
+task :run, [:day] do |t, args|
+  day = what_day(args[:day])
+  puts "OK. Let's run Day#{day}!\n\n"
+  require "./day#{day}"
+  Object.const_get("Day#{day}").go
+end
+
+task :test, [:day] do |t, args|
+  day = what_day(args[:day])
+  puts "Wooo! Let's test Day#{day}!\n\n"
+
+  File.open('./doctest_helper.rb', 'w') do |file|
+    file.write <<~TEST_HELPER
+      require 'day#{day}'
+
+      def day
+        @day ||= Day#{day}.new(Day#{day}::EXAMPLE_INPUT)
+      end
+    TEST_HELPER
+  end
+
+  abort unless system("yard doctest -v ./day#{day}.rb")
+end
+
+task :new do
+  day = what_day
+  Rake::Task["day#{day}"].invoke
+end
+
+rule ( /^day\d\d$/ ) do |task|
+  output_file = "./#{task.name}.rb"
+  if File.exist?(output_file)
+    puts "🛑 No. I'm protecting you from yourself. That file already exists."
+  else
+    puts "🎶 bring on the newwww daaaaay 🎶"
+    File.write(
+      output_file,
+      ERB.new(File.read('./template.rb.erb'))
+         .result_with_hash(day: task.name)
+    )
+    input_file = "../inputs/#{task.name}-input.txt"
+    system("pbpaste > #{input_file}")
+    puts "📝 wrote the clipboard to #{input_file}, hope it was right:"
+    system("cat #{input_file}")
+  end
+end

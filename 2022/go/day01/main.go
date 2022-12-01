@@ -27,11 +27,7 @@ func p2(input []int) int {
 	sort.Slice(input, func(i, j int) bool {
 		return input[i] > input[j]
 	})
-	var top_three_total int
-	for _, elf := range input[:3] {
-		top_three_total += elf
-	}
-	return top_three_total
+	return input[0] + input[1] + input[2]
 }
 
 func parseInput(input string) []int {

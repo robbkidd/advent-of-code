@@ -7,17 +7,9 @@ import (
 )
 
 func main() {
-	input := realInput()
+	input := parseInput(tools.Read("day__"))
 	fmt.Printf("Part 1: %v\n", p1())
 	fmt.Printf("Part 2: %v\n", p2())
-}
-
-func exampleInput() []int {
-	return parseInput(``)
-}
-
-func realInput() []int {
-	return parseInput(tools.Read("day__"))
 }
 
 func parseInput(input string) {

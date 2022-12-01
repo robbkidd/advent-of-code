@@ -9,26 +9,9 @@ import (
 	"github.com/robbkidd/aoc2022/tools"
 )
 
-const (
-	example = `1000
-2000
-3000
-
-4000
-
-5000
-6000
-
-7000
-8000
-9000
-
-10000
-`
-)
-
 func main() {
-	input := realInput()
+	input := parseInput(tools.Read("day01"))
+
 	fmt.Printf("Part 1: %v\n", p1(input))
 	fmt.Printf("Part 2: %v\n", p2(input))
 }
@@ -49,14 +32,6 @@ func p2(input []int) int {
 		top_three_total += elf
 	}
 	return top_three_total
-}
-
-func exampleInput() []int {
-	return parseInput(example)
-}
-
-func realInput() []int {
-	return parseInput(tools.Read("day01"))
 }
 
 func parseInput(input string) []int {

@@ -55,13 +55,14 @@ class Day02
     opp_choice, round_end = line.split(" ")
     opp_shape = OPPONENT_MAP.fetch(opp_choice)
     target_outcome = PART2_MAP.fetch(round_end)
+
     my_shape = case target_outcome
       when :draw
         opp_shape
       when :win
-        DEFEATED_BY.fetch(opp_shape)
+        WHAT_DEFEATS.fetch(opp_shape)
       when :lose
-        DEFEATS.fetch(opp_shape)
+        WHAT_LOSES_TO.fetch(opp_shape)
       end 
     
     SHAPE_SCORES.fetch(my_shape) + OUTCOME_SCORES.fetch(target_outcome)
@@ -69,17 +70,24 @@ class Day02
 
   def against(opp_shape, my_shape)
     return :draw if opp_shape == my_shape
-    return :win if opp_shape == DEFEATS.fetch(my_shape)
+    return :win if opp_shape == WHAT_LOSES_TO.fetch(my_shape)
     return :lose
   end
 
-  DEFEATS = {
+  # the name seems backwards here, but consider:
+  #
+  #   WHAT_LOSES_TO.fetch(:rock) => :scissors
+  #
+  # or "What is defeated by rock?" -> "scissors"
+  WHAT_LOSES_TO = {
     rock: :scissors,
     scissors: :paper,
     paper: :rock,
   }
 
-  DEFEATED_BY = DEFEATS.invert
+  # ... and then we invert it so we can look up the
+  # other direction
+  WHAT_DEFEATS = WHAT_LOSES_TO.invert
 
   OPPONENT_MAP = {
     'A' => :rock,

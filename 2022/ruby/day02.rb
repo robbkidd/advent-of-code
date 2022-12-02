@@ -30,36 +30,39 @@ class Day02
     opp_shape = OPPONENT_MAP.fetch(opp_choice)
     my_shape = MY_MAP.fetch(my_choice)
     
-    my_shape.score + OUTCOME_SCORES.fetch(my_shape.against(opp_shape))
+    SHAPE_SCORES.fetch(my_shape) + OUTCOME_SCORES.fetch(against(opp_shape, my_shape))
   end
 
-  Shape = Struct.new(:name, :score, :defeats) do
-    def against(other)
-      case other.name
-      when name
-        return :draw
-      when defeats
-        return :win 
-      else 
-        return :lose
-      end
-    end
+  def against(opp_shape, my_shape)
+    return :draw if opp_shape == my_shape
+    return :win if opp_shape == DEFEATS.fetch(my_shape)
+    return :lose
   end
 
-  ROCK = Shape.new('rock', 1, 'scissors')
-  PAPER = Shape.new('paper', 2, 'rock')
-  SCISSORS = Shape.new('scissors', 3, 'paper')
+  DEFEATS = {
+    rock: :scissors,
+    scissors: :paper,
+    paper: :rock,
+  }
+
+  DEFEATED_BY = DEFEATS.invert
 
   OPPONENT_MAP = {
-    'A' => ROCK,
-    'B' => PAPER,
-    'C' => SCISSORS,
+    'A' => :rock,
+    'B' => :paper,
+    'C' => :scissors,
   }
 
   MY_MAP = {
-    'X' => ROCK,
-    'Y' => PAPER,
-    'Z' => SCISSORS,
+    'X' => :rock,
+    'Y' => :paper,
+    'Z' => :scissors,
+  }
+
+  SHAPE_SCORES = {
+    rock: 1,
+    paper: 2,
+    scissors: 3,
   }
 
   OUTCOME_SCORES = {

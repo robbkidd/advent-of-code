@@ -15,22 +15,56 @@ class Day02
     @input
       .split("\n")
       .map { |line|
-        score_round(line)
+        score_round_part1(line)
       }
       .reduce(&:+)
   end
 
+  # @example
+  #   day.part2 #=> 12
   def part2
+    @input
+      .split("\n")
+      .map { |line|
+        score_round_part2(line)
+      }
+      .reduce(&:+)
   end
 
   # @example
-  #   day.score_round('A Y') #=> 8
-  def score_round(line)
+  #   day.score_round_part1('A Y') #=> 8
+  # @example
+  #   day.score_round_part1('B X') #=> 1
+  # @example
+  #   day.score_round_part1('C Z') #=> 6
+  def score_round_part1(line)
     opp_choice, my_choice = line.split(" ")
     opp_shape = OPPONENT_MAP.fetch(opp_choice)
-    my_shape = MY_MAP.fetch(my_choice)
+    my_shape = PART1_MAP.fetch(my_choice)
     
     SHAPE_SCORES.fetch(my_shape) + OUTCOME_SCORES.fetch(against(opp_shape, my_shape))
+  end
+
+  # @example
+  #   day.score_round_part2('A Y') #=> 4
+  # @example
+  #   day.score_round_part2('B X') #=> 1
+  # @example
+  #   day.score_round_part2('C Z') #=> 7
+  def score_round_part2(line)
+    opp_choice, round_end = line.split(" ")
+    opp_shape = OPPONENT_MAP.fetch(opp_choice)
+    target_outcome = PART2_MAP.fetch(round_end)
+    my_shape = case target_outcome
+      when :draw
+        opp_shape
+      when :win
+        DEFEATED_BY.fetch(opp_shape)
+      when :lose
+        DEFEATS.fetch(opp_shape)
+      end 
+    
+    SHAPE_SCORES.fetch(my_shape) + OUTCOME_SCORES.fetch(target_outcome)
   end
 
   def against(opp_shape, my_shape)
@@ -53,10 +87,16 @@ class Day02
     'C' => :scissors,
   }
 
-  MY_MAP = {
+  PART1_MAP = {
     'X' => :rock,
     'Y' => :paper,
     'Z' => :scissors,
+  }
+
+  PART2_MAP = {
+    'X' => :lose,
+    'Y' => :draw,
+    'Z' => :win,
   }
 
   SHAPE_SCORES = {

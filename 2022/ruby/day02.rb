@@ -41,8 +41,17 @@ class Day02
     opp_choice, my_choice = line.split(" ")
     opp_shape = OPPONENT_MAP.fetch(opp_choice)
     my_shape = PART1_MAP.fetch(my_choice)
+
+    outcome = case opp_shape
+      when my_shape
+        :draw
+      when WHAT_LOSES_TO.fetch(my_shape)
+        :win
+      else
+        :lose
+      end
     
-    SHAPE_SCORES.fetch(my_shape) + OUTCOME_SCORES.fetch(against(opp_shape, my_shape))
+    SHAPE_SCORES.fetch(my_shape) + OUTCOME_SCORES.fetch(outcome)
   end
 
   # @example
@@ -66,12 +75,6 @@ class Day02
       end 
     
     SHAPE_SCORES.fetch(my_shape) + OUTCOME_SCORES.fetch(target_outcome)
-  end
-
-  def against(opp_shape, my_shape)
-    return :draw if opp_shape == my_shape
-    return :win if opp_shape == WHAT_LOSES_TO.fetch(my_shape)
-    return :lose
   end
 
   # the name seems backwards here, but consider:

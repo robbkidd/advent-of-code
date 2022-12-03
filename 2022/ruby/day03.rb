@@ -9,7 +9,7 @@ class Day03
     @input = input || real_input
   end
 
-  PRIORITIES = [nil] + ('a'..'z').to_a + ('A'..'Z').to_a
+  PRIORITIES = [:dont_be_off_by_one] + ('a'..'z').to_a + ('A'..'Z').to_a
 
   # @example
   #   day.part1 #=> 157
@@ -27,7 +27,19 @@ class Day03
       .reduce(&:+)
   end
 
+  # @example
+  #   day.part2 #=> 70
   def part2
+    @input
+      .split("\n")
+      .map{ |line| line.chars }
+      .each_slice(3)
+      .map { |group_items|
+        group_items[0] & (group_items[1] & group_items[2])
+      }
+      .flatten
+      .map{ |badge| PRIORITIES.index(badge) }
+      .reduce(&:+)
   end
 
   def real_input

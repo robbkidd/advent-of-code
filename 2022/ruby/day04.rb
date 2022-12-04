@@ -20,7 +20,15 @@ class Day04
       .count
   end
 
+  # @example
+  #   day.part2 => 4
   def part2
+    input_as_ranges
+      .map { |assign_a, assign_b|
+        assign_a.to_a & assign_b.to_a
+      }
+      .select {|overlaps| overlaps.any? }
+      .count
   end
 
   def input_as_ranges

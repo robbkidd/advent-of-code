@@ -13,10 +13,9 @@ class Day04
   #   day.part1 => 2
   def part1
     input_as_ranges
-      .map { |assign_a, assign_b|
+      .select { |assign_a, assign_b|
         assign_a.cover?(assign_b) || assign_b.cover?(assign_a)
       }
-      .select {|fully_contains| fully_contains == true }
       .count
   end
 
@@ -24,10 +23,9 @@ class Day04
   #   day.part2 => 4
   def part2
     input_as_ranges
-      .map { |assign_a, assign_b|
-        assign_a.to_a & assign_b.to_a
+      .select { |assign_a, assign_b|
+        (assign_a.to_a & assign_b.to_a).any?
       }
-      .select {|overlaps| overlaps.any? }
       .count
   end
 

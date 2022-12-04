@@ -37,6 +37,39 @@ func fullyCovers(pair Pair) bool {
 	return false
 }
 
+func p2(lines []string) int {
+	var overlapped int
+	for _, line := range lines {
+		pair := lineToPair(line)
+
+		if overlaps(pair) {
+			overlapped++
+			continue
+		}
+	}
+	return overlapped
+}
+
+func overlaps(pair Pair) bool {
+	if fullyCovers(pair) {
+		return true
+	}
+
+	if pair.left.start >= pair.right.start && pair.left.start <= pair.right.stop {
+		return true
+	}
+	if pair.right.start >= pair.left.start && pair.right.stop <= pair.left.stop {
+		return true
+	}
+	if pair.left.stop >= pair.right.start && pair.left.stop <= pair.right.stop {
+		return true
+	}
+	if pair.right.stop >= pair.left.start && pair.right.stop <= pair.left.stop {
+		return true
+	}
+	return false
+}
+
 func lineToPair(line string) Pair {
 	p := strings.Split(line, ",")
 	left := strings.Split(p[0], "-")
@@ -57,10 +90,6 @@ func lineToPair(line string) Pair {
 			stop:  rightStop,
 		},
 	}
-}
-
-func p2(input []string) int {
-	return 0
 }
 
 type Pair struct {

@@ -12,14 +12,7 @@ class Day04
   # @example
   #   day.part1 => 2
   def part1
-    @input
-      .split("\n")
-      .map { |line| line.split(",") }
-      .map { |pair| 
-        pair
-          .map{ |elf| elf.split("-").map(&:to_i)}
-          .map{ |start, stop| Range.new(start,stop) }
-      }
+    input_as_ranges
       .map { |assign_a, assign_b|
         assign_a.cover?(assign_b) || assign_b.cover?(assign_a)
       }
@@ -28,6 +21,17 @@ class Day04
   end
 
   def part2
+  end
+
+  def input_as_ranges
+    @as_ranges ||= @input
+      .split("\n")
+      .map { |line| line.split(",") }
+      .map { |pair| 
+        pair
+          .map{ |elf| elf.split("-").map(&:to_i)}
+          .map{ |start, stop| Range.new(start,stop) }
+      }
   end
 
   def real_input

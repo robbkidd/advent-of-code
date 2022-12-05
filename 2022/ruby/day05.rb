@@ -7,27 +7,40 @@ class Day05
 
   def initialize(input=nil)
     @input = input || real_input
-    @stacks = parse_stacks
     @moves = parse_moves
   end
 
   # @example
   #   day.part1 => "CMZ"
   def part1
+    stacks_9000 = parse_stacks
+
     @moves
       .each { |step|
         step[:quantity].times {
-          @stacks[step[:to]].push( @stacks[step[:from]].pop)
+          stacks_9000[step[:to]].push( stacks_9000[step[:from]].pop)
         }
       }
 
-    @stacks
+    stacks_9000
       .values
       .map(&:last)
       .join("")
   end
 
+  # @example
+  #   day.part2 => "MCD"
   def part2
+    stacks_9001 = parse_stacks
+    @moves
+      .each { |step|
+        stacks_9001[step[:to]] += stacks_9001[step[:from]].pop(step[:quantity])
+      }
+
+    stacks_9001
+      .values
+      .map(&:last)
+      .join("")
   end
 
   # @example

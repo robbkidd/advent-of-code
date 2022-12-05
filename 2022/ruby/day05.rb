@@ -15,6 +15,7 @@ class Day05
   def part1
     crane = CrateMover9000.new(parse_stacks, @moves)
     crane.follow_process
+    puts crane.ugly_christmas_sweater
     crane.top_crates
   end
 
@@ -36,6 +37,31 @@ class Day05
         .map(&:last)
         .join("")
     end
+
+    def ugly_christmas_sweater
+      highest_height = stacks.values.max_by{|v| v.length}.length
+      output = []
+      stacks.each {|idx, stack|
+        crates = []
+        crates << " #{idx} "
+        stack.each_with_index { |c, i|
+          if i == stack.length-1
+            crates << "\e[32m[\e[0m\e[41m\e[1m#{c}\e[0m\e[32m]\e[0m"
+          else
+            crates << "\e[32m[\e[0m\e[41m\e[0m#{c}\e[0m\e[32m]\e[0m"
+          end
+        }
+        crates += (highest_height - stack.length).times.map{|_| "   "}
+        output << crates
+        output << Array.new(highest_height+1, " ")
+      }
+      output
+        .transpose
+        .reverse
+        .map{|level| level.join("")}
+        .unshift(["\n"])
+        .join("\n")
+    end
   end
 
   class CrateMover9000 < CrateMover
@@ -54,6 +80,7 @@ class Day05
   def part2
     crane = CrateMover9001.new(parse_stacks, @moves)
     crane.follow_process
+    puts crane.ugly_christmas_sweater
     crane.top_crates
   end
 

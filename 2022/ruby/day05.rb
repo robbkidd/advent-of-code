@@ -13,34 +13,57 @@ class Day05
   # @example
   #   day.part1 => "CMZ"
   def part1
-    stacks_9000 = parse_stacks
+    crane = CrateMover9000.new(parse_stacks, @moves)
+    crane.follow_process
+    crane.top_crates
+  end
 
-    @moves
-      .each { |step|
-        step[:quantity].times {
-          stacks_9000[step[:to]].push( stacks_9000[step[:from]].pop)
+  class CrateMover
+    attr_reader :stacks, :steps
+
+    def initialize(stacks, steps)
+      @stacks = stacks
+      @steps = steps
+    end
+
+    def follow_process
+      raise NotImplementedError, "You must have your model of CrateMover available to operate the crane."
+    end
+
+    def top_crates
+      stacks
+        .values
+        .map(&:last)
+        .join("")
+    end
+  end
+
+  class CrateMover9000 < CrateMover
+    def follow_process
+      steps
+        .each { |step|
+          step[:quantity].times {
+            stacks[step[:to]].push( stacks[step[:from]].pop)
+          }
         }
-      }
-
-    stacks_9000
-      .values
-      .map(&:last)
-      .join("")
+    end
   end
 
   # @example
   #   day.part2 => "MCD"
   def part2
-    stacks_9001 = parse_stacks
-    @moves
-      .each { |step|
-        stacks_9001[step[:to]] += stacks_9001[step[:from]].pop(step[:quantity])
-      }
+    crane = CrateMover9001.new(parse_stacks, @moves)
+    crane.follow_process
+    crane.top_crates
+  end
 
-    stacks_9001
-      .values
-      .map(&:last)
-      .join("")
+  class CrateMover9001 < CrateMover
+    def follow_process
+      steps
+        .each { |step|
+          stacks[step[:to]] += stacks[step[:from]].pop(step[:quantity])
+        }
+    end
   end
 
   # @example

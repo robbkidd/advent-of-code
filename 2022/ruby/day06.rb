@@ -58,13 +58,8 @@ class Day06
   def scan_for_length(buffer, packet_length)
     chars = buffer.chars
     scan = lookback = packet_length - 1
-    found = false
-    while !found || scan < chars.length do
-      check = chars[scan-lookback..scan]
-      if check.uniq.length == packet_length
-         found = true
-         break
-      end
+    while scan < chars.length do
+      break if packet_length == chars[scan-lookback..scan].uniq.length
       scan += 1
     end
     return scan + 1

@@ -6,7 +6,7 @@ class Day06
   end
 
   def initialize(input=nil)
-    @input = input || real_input
+    @input = (input || real_input).strip
   end
 
   def part1
@@ -14,6 +14,7 @@ class Day06
   end
 
   def part2
+    start_of_message_marker(@input)
   end
 
   # @example
@@ -32,12 +33,35 @@ class Day06
   #   day.start_of_packet_marker('zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw') => 11
   #   
   def start_of_packet_marker(buffer)
-    chars = buffer.tr("\n","").chars
-    scan = 3
+    scan_for_length(buffer, 4)
+  end
+
+  # @example
+  #   day.start_of_message_marker('mjqjpqmgbljsphdztnvjfqwrcgsmlb') => 19
+  #   
+  # @example
+  #   day.start_of_message_marker('bvwbjplbgvbhsrlpgdmjqwftvncz') => 23
+  #   
+  # @example
+  #   day.start_of_message_marker('nppdvjthqldpwncqszvftbrmjlhg') => 23
+  #   
+  # @example
+  #   day.start_of_message_marker('nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg') => 29
+  #   
+  # @example
+  #   day.start_of_message_marker('zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw') => 26
+  #   
+  def start_of_message_marker(buffer)
+    scan_for_length(buffer, 14)
+  end
+  
+  def scan_for_length(buffer, packet_length)
+    chars = buffer.chars
+    scan = lookback = packet_length - 1
     found = false
     while !found || scan < chars.length do
-      check = chars[scan-3..scan]
-      if check.uniq.length == 4
+      check = chars[scan-lookback..scan]
+      if check.uniq.length == packet_length
          found = true
          break
       end

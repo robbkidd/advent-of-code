@@ -1,28 +1,26 @@
 require 'erb'
+require 'yard/doctest/rake'
 
 task :default => :test
 
-def what_day(arg=nil)
-  if arg
-    arg
-  else
-    if day = ENV.fetch("DAY", nil)
-      day
-    else
-      Time.now.day
-    end
-  end.to_s.rjust(2, '0')
+def what_day
+  ENV
+    .fetch("DAY", Time.now.day)
+    .to_i
+    .to_s
+    .rjust(2, '0')
 end
 
-task :run, [:day] do |t, args|
-  day = what_day(args[:day])
+task :run do |t, args|
+  day = what_day
   puts "OK. Let's run Day#{day}!\n\n"
   require "./day#{day}"
   Object.const_get("Day#{day}").go
 end
 
-task :test, [:day] do |t, args|
-  day = what_day(args[:day])
+desc "Run the tests my way; set env var DAY to run a day other than today"
+task :test do |t, args|
+  day = what_day
   puts "Wooo! Let's test Day#{day}!\n\n"
 
   File.open('./doctest_helper.rb', 'w') do |file|
@@ -35,7 +33,12 @@ task :test, [:day] do |t, args|
     TEST_HELPER
   end
 
-  abort unless system("yard doctest -v ./day#{day}.rb")
+  Rake::Task["yard:doctest"].invoke
+end
+
+YARD::Doctest::RakeTask.new do |task|
+  task.doctest_opts = %w[-v] << ENV.fetch("TESTOPTS", "").split(" ")
+  task.pattern = "./day#{what_day}.rb"
 end
 
 task :new do
@@ -57,6 +60,6 @@ rule ( /^day\d\d$/ ) do |task|
     input_file = "../inputs/#{task.name}-input.txt"
     system("pbpaste > #{input_file}")
     puts "📝 wrote the clipboard to #{input_file}, hope it was right:"
-    system("cat #{input_file}")
+    system("head -n 5 #{input_file}")
   end
 end

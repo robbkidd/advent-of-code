@@ -7,7 +7,7 @@ class Day07
 
   def initialize(input=nil)
     @input = input || real_input
-    @dirs = parse_input
+    @dirs = parse_input(@input)
   end
 
   # @example
@@ -46,32 +46,34 @@ class Day07
   def total_dir_size(dir_name)
     @dirs
       .select{ |subdir, _| subdir.start_with?(dir_name) }
-      .map{|dir, files| files.empty? ? 0 : files.map{|name,size| size}.reduce(&:+)}
+      .map{ |_name, size| size }
       .reduce(&:+) 
   end
 
-  def parse_input
+  # @example
+  #   day.parse_input(Day07::EXAMPLE_INPUT) #=> {"root"=>23352670, "root/a"=>94269, "root/a/e"=>584, "root/d"=>24933642}
+  def parse_input(input)
     cwd = "root"
-    @input
+
+    input
       .split("$ ")
-      .each_with_object({}) { |cmd_and_output, dirs|
-        lines = cmd_and_output.split("\n")
-        cmd = lines.shift
-        case cmd 
-        when "cd /"
-          cwd = "root"
-        when "cd .."
-          cwd = cwd.split("/")[0..-2].join("/")
-        when /cd (\w*)/
-          cwd += "/#{$1}"
+      .each_with_object({}) { |command_and_output, dirs| # dirs is updated by and returned from this loop
+        command, output = command_and_output.split("\n", 2)
+
+        case command
+        when ""         ; :do_nothing
+        when "cd /"     ; cwd = "root"
+        when "cd .."    ; cwd = cwd.split("/")[0..-2].join("/")
+        when /cd (\w*)/ ; cwd += "/#{$1}"
+
         when "ls"
-          dirs[cwd] ||= { }
-          lines
-            .reject { |line| line.start_with?("dir")}
-            .map { |line| line.split(" ") }
-            .each { |size, filename| dirs[cwd][filename] = size.to_i }
-        else
-          :do_nothing
+          dirs[cwd] ||= output
+                          .split("\n")
+                          .reject { |line| line.start_with?("dir") }
+                          .map { |line| line.split(" ") }
+                          .reduce(0) { |dir_size, (size, _filename)|
+                            dir_size += size.to_i
+                          }
         end
       }
   end

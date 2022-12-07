@@ -14,17 +14,40 @@ class Day07
   #   day.part1 #=> 95_437
   def part1
     @dirs
-      .map { |dir_name, _|
-        dirs
-          .select{ |subdir, _| subdir.start_with?(dir_name) }
-          .map{|dir, files| files.empty? ? 0 : files.map{|name,size| size}.reduce(&:+)}
-          .reduce(&:+)
-      }
+      .map { |dir_name, _| total_dir_size(dir_name) }
       .select{ |dir_size| dir_size < 100_000 }
       .reduce(&:+)
   end
 
+  # @example
+  #   day.part2 #=> 24_933_642
   def part2
+    disk_size = 70_000_000
+    current_free_space = disk_size - total_dir_size("root")
+    
+    space_needed_for_update = 30_000_000
+    delete_at_least_this_much = space_needed_for_update - current_free_space
+
+    @dirs
+      .map { |dir_name, _| total_dir_size(dir_name) }
+      .select{ |dir_size| dir_size > delete_at_least_this_much }
+      .sort
+      .first
+  end
+
+  # @example e
+  #   day.total_dir_size('root/a/e') #=> 584
+  # @example a
+  #   day.total_dir_size('root/a') #=> 94853
+  # @example d
+  #   day.total_dir_size('root/d') #=> 24933642
+  # @example root
+  #   day.total_dir_size('root') #=> 48381165
+  def total_dir_size(dir_name)
+    @dirs
+      .select{ |subdir, _| subdir.start_with?(dir_name) }
+      .map{|dir, files| files.empty? ? 0 : files.map{|name,size| size}.reduce(&:+)}
+      .reduce(&:+) 
   end
 
   def parse_input
@@ -39,7 +62,6 @@ class Day07
           cwd = "root"
         when "cd .."
           cwd = cwd.split("/")[0..-2].join("/")
-          cwd = "root" if cwd == ""
         when /cd (\w*)/
           cwd += "/#{$1}"
         when "ls"

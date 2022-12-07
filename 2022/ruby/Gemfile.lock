@@ -8,6 +8,7 @@ GEM
     pry (0.14.1)
       coderay (~> 1.1)
       method_source (~> 1.0)
+    rake (13.0.6)
     webrick (1.7.0)
     yard (0.9.28)
       webrick (~> 1.7.0)
@@ -17,11 +18,13 @@ GEM
 
 PLATFORMS
   arm64-darwin-22
+  ruby
 
 DEPENDENCIES
   priority_queue_cxx
   pry
+  rake
   yard-doctest
 
 BUNDLED WITH
-   2.3.7
+   2.3.26

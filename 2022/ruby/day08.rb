@@ -29,16 +29,23 @@ class Day08
   def visible?(r,c)
     return true if row_bounds.minmax.include?(r) || column_bounds.minmax.include?(c)
   
+    coords_from(r,c)
+      .map { |coords_to_edge|
+        coords_to_edge
+          .map{ |coord| trees[coord] }
+          .all? { |height| height < trees[[r,c]]}
+      }.any? 
+  end
+
+  # @example
+  #   day.coords_from(2,3) #=> []
+  def coords_from(r,c)
     [
-      (row_bounds.min..r-1).map{ |row| [row, c] },    # from top
-      (r+1..row_bounds.max).map{ |row| [row, c] },    # from bottom
-      (column_bounds.min..c-1).map{ |col| [r, col] }, # from left
-      (c+1..column_bounds.max).map{ |col| [r, col] }, # from right
-    ].map { |coords_to_edge|
-      coords_to_edge
-        .map{ |coord| trees[coord] }
-        .all? { |height| height < trees[[r,c]]}
-    }.any? 
+      (r-1).downto(row_bounds.min).map{ |row| [row, c] },    # to top
+      (r+1).upto(row_bounds.max).map{ |row| [row, c] },      # to bottom
+      (c-1).downto(column_bounds.min).map{ |col| [r, col] }, # to left
+      (c+1).upto(column_bounds.max).map{ |col| [r, col] },   # to right
+    ]
   end
 
   # @example

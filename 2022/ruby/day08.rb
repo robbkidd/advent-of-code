@@ -17,28 +17,50 @@ class Day08
   #   day.part1 #=> 21
   def part1
     trees
-      .select { |coord, _height| visible?(*coord) }
+      .select { |coord, _height| visible_from_edge?(*coord) }
       .count
   end
 
+  # @example
+  #   day.part2 #=> 8
   def part2
+    trees
+      .map { |coord, _height| scenic_score(*coord) }
+      .max
   end
 
   # @example
-  #   day.visible?(2,3) #=> true
-  def visible?(r,c)
+  #   day.visible_from_edge?(3,2) #=> true
+  def visible_from_edge?(r,c)
     return true if row_bounds.minmax.include?(r) || column_bounds.minmax.include?(c)
   
     coords_from(r,c)
       .map { |coords_to_edge|
         coords_to_edge
-          .map{ |coord| trees[coord] }
-          .all? { |height| height < trees[[r,c]]}
-      }.any? 
+          .map{ |coord| trees[coord] } # convert coords to heights
+          .all? { |height| height < trees[[r,c]]} # are all heights in this direction less than current tree? i.e. visible from edge
+      }.any? # are any of the directions visible from the edge?
   end
 
-  # @example
-  #   day.coords_from(2,3) #=> []
+  # @example ok
+  #   day.scenic_score(1,2) #=> 4
+  # @example better
+  #   day.scenic_score(3,2) #=> 8
+  def scenic_score(r,c)
+    coords_from(r,c)
+      .map { |coords_to_edge|
+        heights = coords_to_edge.map{ |coord| trees[coord] }
+        view = []
+        blocked = false
+        while (tree = heights.shift) && !blocked do
+          view << tree
+          blocked = true if tree >= trees[[r,c]]
+        end
+        view.count
+      }
+      .reduce(&:*)
+  end
+
   def coords_from(r,c)
     [
       (r-1).downto(row_bounds.min).map{ |row| [row, c] },    # to top

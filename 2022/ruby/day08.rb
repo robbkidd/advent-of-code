@@ -58,6 +58,10 @@ class Tree
     height <=> other.height
   end
 
+  def other_trees_in_cardinal_directions
+    @other_trees_in_cardinal_directions ||= forest.trees_in_cardinal_directions_from(self)
+  end
+
   def visible?
     @visible ||= 
       ( forest.on_edge?(self) || 
@@ -66,10 +70,6 @@ class Tree
             .map { |🌲🌲🌲| 🌲🌲🌲.all? { |🌲| 🌲 < self } } # am I visible in that direction?
             .any? # am I visible in any direction?
       ) 
-  end
-
-  def other_trees_in_cardinal_directions
-    @other_trees_in_cardinal_directions ||= forest.trees_in_cardinal_directions_from(self)
   end
 
   def scenic_score
@@ -109,6 +109,10 @@ class Forest
     populate(input)
   end
 
+  def size
+    trees.size
+  end
+
   def most_scenic_tree
     @most_scenic_tree ||= 
       trees
@@ -116,7 +120,6 @@ class Forest
         .max_by { |🌲| 🌲.scenic_score }
         .tap { |🌲| 🌲.🏆 = true }
   end
-
 
   # @example
   #   forest = Forest.new(day.input)
@@ -153,8 +156,8 @@ class Forest
 
   def coerce_to_tree(something_treeish)
     case something_treeish
-    when Array ; tree_at(something_treeish)
     when Tree ; something_treeish
+    when Array ; tree_at(something_treeish)
     else
       :lolwut_is_that
     end
@@ -164,6 +167,7 @@ class Forest
   #   forest = Forest.new(day.input)
   #   forest.row_bounds #=> 0..4
   #   forest.column_bounds #=> 0..4
+  #   forest.size #=> 25
   def populate(input)
     input
       .split("\n")

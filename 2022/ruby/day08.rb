@@ -25,9 +25,7 @@ class Day08
   # @example
   #   day.part2 #=> 8
   def part2
-    most_scenic_tree = forest.trees.values.max_by {|🌲| 🌲.scenic_score }
-    most_scenic_tree.🏆 = true
-    most_scenic_tree.scenic_score
+    forest.most_scenic_tree.scenic_score
   end
 
   def real_input
@@ -108,6 +106,14 @@ class Forest
   def initialize(input)
     @trees = Hash.new(:out_of_bounds)
     populate(input)
+  end
+
+  def most_scenic_tree
+    @most_scenic_tree ||= 
+      trees
+        .values
+        .max_by { |🌲| 🌲.scenic_score }
+        .tap { |🌲| 🌲.🏆 = true }
   end
 
 

@@ -3,6 +3,7 @@ class Day08
     day = new
     puts "Part 1: #{day.part1}"
     puts "Part 2: #{day.part2}"
+    day.forest.display
   end
 
   attr_reader :input, :forest
@@ -180,12 +181,49 @@ class Forest
                       .map{ |dimension| Range.new(*dimension.minmax) }
   end
 
-  def to_s
+  # @example scenic
+  #   forest = Forest.new(day.input)
+  #   forest.display
+  #
+  # @example rainbow
+  #   forest = Forest.new(day.input)
+  #   forest.display(:rainbow)
+  def display(type=:scenic_tree_house)
+    visible_from_tree_house = most_scenic_tree.scenic_view.flatten.map(&:coord)
     puts
     @row_bounds.each do |row|
       @column_bounds.each do |column|
-
+        tree = trees[[row,column]]
+        case type
+        when :scenic_tree_house
+          if tree.🏆
+            print "🛖"
+          elsif visible_from_tree_house.include?(tree.coord)
+            print "\e[41m\e[1m#{tree.height}\e[0m"
+          else
+            print "\e[32m#{tree.height}\e[0m"
+          end
+        when :rainbow
+            print RAINBOWIZE.fetch(tree.height)
+        else
+          raise "I don't know how to print #{type}."
+        end
       end
+      puts
     end
+    puts
   end
 end
+
+RAINBOWIZE = {
+  0 => "\e[30m0\e[0m",
+  1 => "\e[35m1\e[0m",
+  2 => "\e[31m2\e[0m",
+  3 => "\e[34m3\e[0m",
+  4 => "\e[32m4\e[0m",
+  5 => "\e[36m5\e[0m",
+  6 => "\e[37m6\e[0m",
+  7 => "\e[33m7\e[0m",
+  8 => "\e[33m8\e[0m",
+  9 => "\e[1m\e[35m\e[45m9\e[0m"
+}

@@ -1,49 +1,28 @@
 require 'erb'
 require 'yard/doctest/rake'
+require_relative 'day'
 
 task :default => :test
 
-def what_day
-  ENV
-    .fetch("DAY", Time.now.day)
-    .to_i
-    .to_s
-    .rjust(2, '0')
-end
-
 task :run do |t, args|
-  day = what_day
-  puts "OK. Let's run Day#{day}!\n\n"
-  require "./day#{day}"
-  Object.const_get("Day#{day}").go
+  puts "OK. Let's run #{WhichDay.klass_name}!\n\n"
+  require "./#{WhichDay.klass_name}"
+  WhichDay.klass.go
 end
 
 desc "Run the tests my way; set env var DAY to run a day other than today"
 task :test do |t, args|
-  day = what_day
-  puts "Wooo! Let's test Day#{day}!\n\n"
-
-  File.open('./doctest_helper.rb', 'w') do |file|
-    file.write <<~TEST_HELPER
-      require 'day#{day}'
-
-      def day
-        @day ||= Day#{day}.new(Day#{day}::EXAMPLE_INPUT)
-      end
-    TEST_HELPER
-  end
-
+  puts "Wooo! Let's test #{WhichDay.klass_name}!\n\n"
   Rake::Task["yard:doctest"].invoke
 end
 
 YARD::Doctest::RakeTask.new do |task|
   task.doctest_opts = %w[-v] << ENV.fetch("TESTOPTS", "").split(" ")
-  task.pattern = "./day#{what_day}.rb"
+  task.pattern = "./#{WhichDay.klass_name.downcase}.rb"
 end
 
 task :new do
-  day = what_day
-  Rake::Task["day#{day}"].invoke
+  Rake::Task[WhichDay.klass_name.downcase].invoke
 end
 
 rule ( /^day\d\d$/ ) do |task|
@@ -55,9 +34,9 @@ rule ( /^day\d\d$/ ) do |task|
     File.write(
       output_file,
       ERB.new(File.read('./template.rb.erb'))
-         .result_with_hash(day: task.name)
+         .result_with_hash(day_klass_name: WhichDay.klass_name)
     )
-    input_file = "../inputs/#{task.name}-input.txt"
+    input_file = WhichDay.input_filename
     system("pbpaste > #{input_file}")
     puts "📝 wrote the clipboard to #{input_file}, hope it was right:"
     system("head -n 5 #{input_file}")

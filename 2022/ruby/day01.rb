@@ -1,13 +1,4 @@
-class Day01
-  def self.go
-    day = new
-    puts "Part 1: #{day.part1}"
-    puts "Part 2: #{day.part2}"
-  end
-
-  def initialize(input=nil)
-    @input = input || real_input
-  end
+class Day01 < Day
 
   # @example
   #   day.part1 #=> 24_000
@@ -33,11 +24,6 @@ class Day01
       }
       .sort
       .reverse
-  end
-
-
-  def real_input
-    File.read('../inputs/day01-input.txt')
   end
 
   EXAMPLE_INPUT = <<~INPUT

@@ -1,16 +1,7 @@
-class Day04
-  def self.go
-    day = new
-    puts "Part 1: #{day.part1}"
-    puts "Part 2: #{day.part2}"
-  end
-
-  def initialize(input=nil)
-    @input = input || real_input
-  end
+class Day04 < Day
 
   # @example
-  #   day.part1 => 2
+  #   day.part1 #=> 2
   def part1
     input_as_ranges
       .select { |assign_a, assign_b|
@@ -20,7 +11,7 @@ class Day04
   end
 
   # @example
-  #   day.part2 => 4
+  #   day.part2 #=> 4
   def part2
     input_as_ranges
       .select { |assign_a, assign_b|
@@ -38,10 +29,6 @@ class Day04
           .map{ |elf| elf.split("-").map(&:to_i)}
           .map{ |start, stop| Range.new(start,stop) }
       }
-  end
-
-  def real_input
-    File.read('../inputs/day04-input.txt')
   end
 
   EXAMPLE_INPUT = <<~INPUT

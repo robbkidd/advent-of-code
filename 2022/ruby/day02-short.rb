@@ -2,16 +2,7 @@
 #
 # much shorter and simpler because there are only
 # 9 combinations of possible outcomes for a round 
-class Day02
-  def self.go
-    day = new
-    puts "Part 1: #{day.part1}"
-    puts "Part 2: #{day.part2}"
-  end
-
-  def initialize(input=nil)
-    @input = input || real_input
-  end
+class Day02 < Day
 
   # @example
   #   day.part1 #=> 15
@@ -60,10 +51,6 @@ class Day02
     "C Y" => 6, # scissors v. draw (scissors): 3 + 3 = 6
     "C Z" => 7, # scissors v. win (rock): 6 + 1 = 7
   }
-
-  def real_input
-    File.read('../inputs/day02-input.txt')
-  end
 
   EXAMPLE_INPUT = <<~INPUT
     A Y

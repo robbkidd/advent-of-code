@@ -1,16 +1,11 @@
-class Day08
-  def self.go
-    day = new
-    puts "Part 1: #{day.part1}"
-    puts "Part 2: #{day.part2}"
-    day.forest.display
+class Day08 < Day
+  def go
+    super
+    forest.display
   end
 
-  attr_reader :input, :forest
-
-  def initialize(input=nil)
-    @input = input || real_input
-    @forest = Forest.new(@input)
+  def forest
+    @forest ||= Forest.new(@input)
   end
 
   # @example

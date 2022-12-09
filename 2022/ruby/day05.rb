@@ -1,19 +1,12 @@
-class Day05
-  def self.go
-    day = new
-    puts "Part 1: #{day.part1}"
-    puts "Part 2: #{day.part2}"
-  end
-
-  def initialize(input=nil)
-    @input = input || real_input
-    @moves = parse_moves
+class Day05 < Day
+  def moves
+    @moves ||= parse_moves
   end
 
   # @example
-  #   day.part1 => "CMZ"
+  #   day.part1 #=> "CMZ"
   def part1
-    crane = CrateMover9000.new(parse_stacks, @moves)
+    crane = CrateMover9000.new(parse_stacks, moves)
     crane.follow_process
     puts crane.ugly_christmas_sweater
     crane.top_crates
@@ -76,9 +69,9 @@ class Day05
   end
 
   # @example
-  #   day.part2 => "MCD"
+  #   day.part2 #=> "MCD"
   def part2
-    crane = CrateMover9001.new(parse_stacks, @moves)
+    crane = CrateMover9001.new(parse_stacks, moves)
     crane.follow_process
     puts crane.ugly_christmas_sweater
     crane.top_crates
@@ -94,7 +87,7 @@ class Day05
   end
 
   # @example
-  #   day.parse_stacks => EXAMPLE_STACK_START
+  #   day.parse_stacks #=> EXAMPLE_STACK_START
   def parse_stacks
     stacks_input, _ = @input.split("\n\n")
 
@@ -111,7 +104,7 @@ class Day05
   end
 
   # @example
-  #   day.parse_moves => EXAMPLE_MOVES
+  #   day.parse_moves #=> EXAMPLE_MOVES
   def parse_moves
     _, moves_input = @input.split("\n\n")
     

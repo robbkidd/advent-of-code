@@ -1,14 +1,5 @@
-class Day02
-  def self.go
-    day = new
-    puts "Part 1: #{day.part1}"
-    puts "Part 2: #{day.part2}"
-  end
-
-  def initialize(input=nil)
-    @input = input || real_input
-  end
-
+class Day02 < Day
+  
   # @example
   #   day.part1 #=> 15
   def part1
@@ -121,10 +112,6 @@ class Day02
     draw: 3,
     win: 6,
   }
-
-  def real_input
-    File.read('../inputs/day02-input.txt')
-  end
 
   EXAMPLE_INPUT = <<~INPUT
     A Y

@@ -1,19 +1,13 @@
-class Day07
-  def self.go
-    day = new
-    puts "Part 1: #{day.part1}"
-    puts "Part 2: #{day.part2}"
-  end
+class Day07 < Day
 
-  def initialize(input=nil)
-    @input = input || real_input
-    @dirs = parse_input(@input)
+  def dirs
+    @dirs ||= parse_input(@input)
   end
 
   # @example
   #   day.part1 #=> 95_437
   def part1
-    @dirs
+    dirs
       .map { |dir_name, _| total_dir_size(dir_name) }
       .select{ |dir_size| dir_size < 100_000 }
       .reduce(&:+)
@@ -28,7 +22,7 @@ class Day07
     space_needed_for_update = 30_000_000
     delete_at_least_this_much = space_needed_for_update - current_free_space
 
-    @dirs
+    dirs
       .map { |dir_name, _| total_dir_size(dir_name) }
       .select{ |dir_size| dir_size > delete_at_least_this_much }
       .sort
@@ -44,7 +38,7 @@ class Day07
   # @example root
   #   day.total_dir_size('root') #=> 48381165
   def total_dir_size(dir_name)
-    @dirs
+    dirs
       .select{ |subdir, _| subdir.start_with?(dir_name) }
       .map{ |_name, size| size }
       .reduce(&:+) 
@@ -76,10 +70,6 @@ class Day07
                           }
         end
       }
-  end
-
-  def real_input
-    File.read('../inputs/day07-input.txt')
   end
 
   EXAMPLE_INPUT = <<~INPUT

@@ -1,22 +1,15 @@
-class <%= day.capitalize %>
-  def self.go
-    day = new
-    puts "Part 1: #{day.part1}"
-    puts "Part 2: #{day.part2}"
-  end
+require_relative 'day'
 
-  def initialize(input=nil)
-    @input = input || real_input
-  end
+class <%= day_klass_name %> < Day # >
 
+  # @example
+  #   day.part1 #=> 'hey'
   def part1
   end
 
+  # @example
+  #   day.part2 #=> 'how are you'
   def part2
-  end
-
-  def real_input
-    File.read('../inputs/<%= day.downcase %>-input.txt')
   end
 
   EXAMPLE_INPUT = <<~INPUT

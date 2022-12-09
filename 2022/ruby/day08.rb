@@ -54,7 +54,8 @@ Tree = Struct.new(:coord, :height, :forest) do
     @visible ||= 
       ( forest.on_edge?(self) || 
           other_trees_in_cardinal_directions
-            .map { |_dir, trees| trees.all? { |other| other < self } } # am I visible in that direction?
+            .values # just the trees in that direction, please
+            .map { |🌲🌲🌲| 🌲🌲🌲.all? { |🌲| 🌲 < self } } # am I visible in that direction?
             .any? # am I visible in any direction?
       ) 
   end
@@ -79,13 +80,13 @@ Tree = Struct.new(:coord, :height, :forest) do
   def scenic_view
     @scenic_view ||=
       other_trees_in_cardinal_directions
-        .map { |_dir, trees|
+        .map { |_🧭, 🌲🌲🌲|
           blocked = false
-          trees
-            .each_with_object([]) {|other_tree, view|
+          🌲🌲🌲
+            .each_with_object([]) {|🌲, view|
               if !blocked
-                view << other_tree
-                blocked = true if other_tree >= self
+                view << 🌲
+                blocked = true if 🌲 >= self
               end
             }
         }

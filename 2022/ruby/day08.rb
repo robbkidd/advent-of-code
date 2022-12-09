@@ -48,6 +48,10 @@ Tree = Struct.new(:coord, :height, :forest) do
     @visible ||= forest.tree_visible_from_edge?(self)
   end
 
+  def other_trees_in_cardinal_directions
+    @other_trees_in_cardinal_directions ||= forest.trees_in_cardinal_directions_from(self)
+  end
+
   def scenic_score
     @scenic_score ||= forest.scenic_score(self)
   end
@@ -74,12 +78,11 @@ class Forest
     tree = coerce_to_tree(tree)
 
     on_edge?(tree) ||
-      coords_in_cardinal_directions_from(tree)
-        .map { |coords_in_a_direction_to_edge|
-          coords_in_a_direction_to_edge
-            .map{ |coord| tree_at(coord).height } # collect all the heights in this direction
-            .all? { |other_height| other_height < tree.height} # are all heights in this direction less than current tree?
-        }.any? # tree visible from the edge in any of the directions?
+      tree.other_trees_in_cardinal_directions
+        .map { |_direction, trees_that_way|
+          trees_that_way
+            .all? { |other_tree| other_tree.height < tree.height } # visible in this direction?
+        }.any? # visible in any direction?
   end
 
   # @example ok

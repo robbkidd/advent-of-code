@@ -44,11 +44,17 @@ class Day08
 end
 
 Tree = Struct.new(:coord, :height, :forest) do
+  include Comparable
+
+  def <=>(other)
+    height <=> other.height
+  end
+
   def visible
     @visible ||= 
       ( forest.on_edge?(self) || 
           other_trees_in_cardinal_directions
-            .map { |_dir, trees| trees.all? { |other| other.height < height } } # am I visible in that direction?
+            .map { |_dir, trees| trees.all? { |other| other < self } } # am I visible in that direction?
             .any? # am I visible in any direction?
       ) 
   end
@@ -79,7 +85,7 @@ Tree = Struct.new(:coord, :height, :forest) do
             .each_with_object([]) {|other_tree, view|
               if !blocked
                 view << other_tree
-                blocked = true if other_tree.height >= self.height
+                blocked = true if other_tree >= self
               end
             }
         }

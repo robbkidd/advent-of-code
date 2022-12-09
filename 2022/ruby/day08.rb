@@ -19,7 +19,7 @@ class Day08
     forest
       .trees
       .values
-      .select { |🌲| 🌲.visible }
+      .select { |🌲| 🌲.visible? }
       .count
   end
 
@@ -58,7 +58,7 @@ class Tree
     height <=> other.height
   end
 
-  def visible
+  def visible?
     @visible ||= 
       ( forest.on_edge?(self) || 
           other_trees_in_cardinal_directions

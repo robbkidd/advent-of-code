@@ -57,9 +57,8 @@ class Forest
   attr_reader :trees, :row_bounds, :column_bounds
 
   def initialize(input)
-    @input = input
     @trees = Hash.new(:out_of_bounds)
-    populate
+    populate(input)
   end
 
   # @example when on the edge
@@ -129,14 +128,31 @@ class Forest
     row_bounds.minmax.include?(r) || column_bounds.minmax.include?(c)
   end
 
+  # @example
+  #   forest = Forest.new(day.input)
+  #   forest.coords_in_cardinal_directions_from([3,2]) #=> [[[2, 2], [1, 2], [0, 2]], [[4, 2]], [[3, 1], [3, 0]], [[3, 3], [3, 4]]]
   def coords_in_cardinal_directions_from(tree)
     r,c = coerce_to_tree(tree).coord
     [
-      (r-1).downto(row_bounds.min).map{ |row| [row, c] },    # to top
-      (r+1).upto(row_bounds.max).map{ |row| [row, c] },      # to bottom
-      (c-1).downto(column_bounds.min).map{ |col| [r, col] }, # to left
-      (c+1).upto(column_bounds.max).map{ |col| [r, col] },   # to right
+      (r-1).downto(row_bounds.min)    .map{ |row| [row, c] }, # to top
+      (r+1).upto(row_bounds.max)      .map{ |row| [row, c] }, # to bottom
+      (c-1).downto(column_bounds.min) .map{ |col| [r, col] }, # to left
+      (c+1).upto(column_bounds.max)   .map{ |col| [r, col] }, # to right
     ]
+  end
+
+  # @example
+  #   forest = Forest.new(day.input)
+  #   nsew_trees = forest.trees_in_cardinal_directions_from([3,2])
+  #   nsew_trees.values.map{|dir_trees| dir_trees.map(&:coord) } == forest.coords_in_cardinal_directions_from([3,2]) #=> true
+  def trees_in_cardinal_directions_from(tree)
+    r,c = coerce_to_tree(tree).coord
+    {
+      to_top:    (r-1).downto(row_bounds.min)    .map{ |row| tree_at([row, c]) },
+      to_bottom: (r+1).upto(row_bounds.max)      .map{ |row| tree_at([row, c]) },
+      to_left:   (c-1).downto(column_bounds.min) .map{ |col| tree_at([r, col]) }, 
+      to_right:  (c+1).upto(column_bounds.max)   .map{ |col| tree_at([r, col]) },
+    }
   end
 
   def coerce_to_tree(something_treeish)
@@ -152,8 +168,8 @@ class Forest
   #   forest = Forest.new(day.input)
   #   forest.row_bounds #=> 0..4
   #   forest.column_bounds #=> 0..4
-  def populate
-    @input
+  def populate(input)
+    input
       .split("\n")
       .map{|row| row.chars.map(&:to_i)}
       .each_with_index{ |row, r|
@@ -167,5 +183,9 @@ class Forest
                       .keys
                       .transpose
                       .map{ |dimension| Range.new(*dimension.minmax) }
+  end
+
+  def to_s
+    "a forest (#{self.object_id})"
   end
 end

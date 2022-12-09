@@ -45,7 +45,12 @@ end
 
 Tree = Struct.new(:coord, :height, :forest) do
   def visible
-    @visible ||= forest.tree_visible_from_edge?(self)
+    @visible ||= 
+      ( forest.on_edge?(self) || 
+          other_trees_in_cardinal_directions
+            .map { |_dir, trees| trees.all? { |other| other.height < height } } # am I visible in that direction?
+            .any? # am I visible in any direction?
+      ) 
   end
 
   def other_trees_in_cardinal_directions
@@ -53,7 +58,31 @@ Tree = Struct.new(:coord, :height, :forest) do
   end
 
   def scenic_score
-    @scenic_score ||= forest.scenic_score(self)
+    @scenic_score ||= scenic_view.map(&:count).reduce(&:*)
+  end
+
+  # @example ok
+  #   forest = Forest.new(day.input)
+  #   tree = forest.tree_at([1,2])
+  #   tree.scenic_view.map(&:count) #=> [1, 2, 1, 2]
+  #
+  # @example better
+  #   forest = Forest.new(day.input)
+  #   tree = forest.tree_at([3,2])
+  #   tree.scenic_view.map(&:count) #=> [2, 1, 2, 2]
+  def scenic_view
+    @scenic_view ||=
+      other_trees_in_cardinal_directions
+        .map { |_dir, trees|
+          blocked = false
+          trees
+            .each_with_object([]) {|other_tree, view|
+              if !blocked
+                view << other_tree
+                blocked = true if other_tree.height >= self.height
+              end
+            }
+        }
   end
 end
 
@@ -65,53 +94,6 @@ class Forest
     populate(input)
   end
 
-  # @example when on the edge
-  #   forest = Forest.new(day.input)
-  #   forest.tree_visible_from_edge?([0,0]) #=> true
-  #
-  # @example when visible in the midst
-  #   forest = Forest.new(day.input)
-  #   tree = forest.tree_at([3,2])
-  #   forest.tree_visible_from_edge?(tree) #=> true
-  #   tree.visible                         #=> true
-  def tree_visible_from_edge?(tree)
-    tree = coerce_to_tree(tree)
-
-    on_edge?(tree) ||
-      tree.other_trees_in_cardinal_directions
-        .map { |_direction, trees_that_way|
-          trees_that_way
-            .all? { |other_tree| other_tree.height < tree.height } # visible in this direction?
-        }.any? # visible in any direction?
-  end
-
-  # @example ok
-  #   forest = Forest.new(day.input)
-  #   tree = forest.tree_at([1,2])
-  #   forest.scenic_score(tree) #=> 4
-  #   tree.scenic_score         #=> 4
-  #
-  # @example better
-  #   forest = Forest.new(day.input)
-  #   tree = forest.tree_at([3,2])
-  #   forest.scenic_score(tree) #=> 8
-  #   tree.scenic_score         #=> 8
-  def scenic_score(tree)
-    tree = coerce_to_tree(tree)
-
-    coords_in_cardinal_directions_from(tree)
-      .map { |coords_in_a_direction_to_edge|
-          other_trees = coords_in_a_direction_to_edge.map{ |coord| tree_at(coord) } # collect all the trees in this direction
-          view = []
-          blocked = false
-          while (other_tree = other_trees.shift) && !blocked do
-            view << other_tree
-            blocked = true if other_tree.height >= tree.height
-          end
-          view.count
-        }
-        .reduce(&:*)
-  end
 
   # @example
   #   forest = Forest.new(day.input)
@@ -133,21 +115,8 @@ class Forest
 
   # @example
   #   forest = Forest.new(day.input)
-  #   forest.coords_in_cardinal_directions_from([3,2]) #=> [[[2, 2], [1, 2], [0, 2]], [[4, 2]], [[3, 1], [3, 0]], [[3, 3], [3, 4]]]
-  def coords_in_cardinal_directions_from(tree)
-    r,c = coerce_to_tree(tree).coord
-    [
-      (r-1).downto(row_bounds.min)    .map{ |row| [row, c] }, # to top
-      (r+1).upto(row_bounds.max)      .map{ |row| [row, c] }, # to bottom
-      (c-1).downto(column_bounds.min) .map{ |col| [r, col] }, # to left
-      (c+1).upto(column_bounds.max)   .map{ |col| [r, col] }, # to right
-    ]
-  end
-
-  # @example
-  #   forest = Forest.new(day.input)
   #   nsew_trees = forest.trees_in_cardinal_directions_from([3,2])
-  #   nsew_trees.values.map{|dir_trees| dir_trees.map(&:coord) } == forest.coords_in_cardinal_directions_from([3,2]) #=> true
+  #   nsew_trees.values.map{|dir_trees| dir_trees.map(&:coord) } #=> [[[2, 2], [1, 2], [0, 2]], [[4, 2]], [[3, 1], [3, 0]], [[3, 3], [3, 4]]]
   def trees_in_cardinal_directions_from(tree)
     r,c = coerce_to_tree(tree).coord
     {

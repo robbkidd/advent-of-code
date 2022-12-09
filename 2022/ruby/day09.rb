@@ -6,18 +6,24 @@ class Day09 < Day # >
   # @example
   #   day.part1 #=> 13
   def part1
-    rope = Rope.new
-    motions
-      .each do |direction, steps| 
-        steps.times { rope.step(direction) }
-      end
-
-    rope.tail_visits.count
+    Rope
+      .new
+      .go_through_the_motions(motions)
+      .tail_visits
+      .count
   end
 
   # @example
-  #   day.part2
+  #   day.part2 #=> 1
+  # @example larger input
+  #   day = Day09.new(Day09::PART2_EXAMPLE_INPUT)
+  #   day.part2 #=> 36
   def part2
+    Rope
+      .new(10)
+      .go_through_the_motions(motions)
+      .tail_visits
+      .count
   end
 
   # @example
@@ -40,19 +46,57 @@ class Day09 < Day # >
     L 5
     R 2
   INPUT
+
+  PART2_EXAMPLE_INPUT = <<~PART2
+    R 5
+    U 8
+    L 8
+    D 3
+    R 17
+    D 10
+    L 25
+    U 20
+  PART2
 end
 
-# @example
-#   rope = Rope.new
-#   rope.head #=> [0,0]
 class Rope
   START = [0,0]
 
-  attr_reader :head, :tail, :tail_visits
+  attr_reader :knots, :length, :tail_visits
+  
+  # @example part1 length
+  #   rope = Rope.new
+  #   rope.head #=> [0,0]
+  #   rope.tail #=> [0,0]
+  #   rope.knots #=> [[0, 0], [0, 0]]
+  #
+  # @example part2 length
+  #   rope = Rope.new(10)
+  #   rope.knots.length #=> 10
+  #   rope.knots        #=> [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]
+  #   rope.head         #=> [0,0]
+  #   rope.tail         #=> [0,0]
+  def initialize(length=2)
+    @length = length
+    @knots = Array.new(length, START)
+    @tail_visits = Set.new.add(tail)
+  end
 
-  def initialize
-    @head = @tail = START
-    @tail_visits = Set.new.add(@tail)
+  def head
+    knots.first
+  end
+
+  def tail
+    knots.last
+  end
+
+  def go_through_the_motions(motions)
+    motions
+      .each do |direction, steps| 
+        steps.times { step(direction) }
+      end
+
+    self
   end
 
   # @example simple step
@@ -62,6 +106,7 @@ class Rope
   #
   # @example first motion, one step
   #   rope = Rope.new
+  #   rope.head      #=> [0,0]
   #   rope.step("R")
   #   rope.to_s      #=> EXAMPLE_STATES["1-R 4.1"].strip
   #
@@ -77,36 +122,55 @@ class Rope
   #   4.times { rope.step("R") }
   #   rope.to_s      #=> EXAMPLE_STATES["1-R 4.4"].strip
   def step(direction)
-    @head = @head.zip(DIR_OFFSET.fetch(direction)).map {|p| p.reduce(&:+)}
-    if !plancky?
-      tail_should_move = @head.zip(@tail).map {|p| p.reduce(&:<=>)}
-      @tail = @tail
-                .zip( @head.zip(@tail).map {|p| p.reduce(&:<=>)} ) # < / = / > ?
-                .map {|p| p.reduce(&:+)}
-      
-      @tail_visits.add(@tail)
-    end
+    next_knots = []
+    next_knots << move_knot(head, DIR_OFFSET.fetch(direction))
+
+    (1..length-1)
+      .each do |idx|
+        knot = knots.at(idx)
+        knot_ahead = next_knots.at(idx-1)
+
+        if plancky?(knot_ahead, knot)
+          next_knots << knot
+        else
+          next_knots << move_knot(knot, offset_toward(knot_ahead, knot))
+        end
+      end
+    
+    raise :whaaat unless next_knots.length == @knots.length
+
+    @knots = next_knots
+    tail_visits.add(tail)
   end
 
-  def plancky?
-    look_around_you(@tail).include?(@head)
+  def move_knot(knot_pos, offset)
+    [
+      knot_pos[0] + offset[0],
+      knot_pos[1] + offset[1],
+    ]
   end
 
-  TOUCHING_OFFSETS = [-1, -1, 0, 0, 1, 1].permutation(2).to_a.uniq.freeze
-  # @example includes the given location
+  def offset_toward(ahead, behind)
+    [
+      ahead[0] <=> behind[0],
+      ahead[1] <=> behind[1],
+    ]
+  end
+
+  # @example
   #   rope = Rope.new
-  #   rope.look_around_you([0,0]).length          #=> 9
-  #   rope.look_around_you([0,0]).include?([0,0]) #=> true
-  #
-  # @example works for more than origin
-  #   rope = Rope.new
-  #   rope.look_around_you([10,20]) #=> [[9, 19], [9, 20], [9, 21], [10, 19], [10, 20], [10, 21], [11, 19], [11, 20], [11, 21]]
-  def look_around_you(location)
-    TOUCHING_OFFSETS.map{ |offset|
-      location
-        .zip(offset)
-        .map { |p| p.reduce(&:+) }
-    }
+  #   rope.plancky?( [0,0], [0,0]) #=> true
+  #   rope.plancky?( [0,1], [0,0]) #=> true
+  def plancky?(ahead, behind)
+    difference(ahead, behind)
+      .map(&:abs)
+      .all? {|d| -2 < d && d < 2}
+  end
+
+  def difference(a, b)
+    [a,b]
+      .transpose
+      .map { |d1,d2| d1 - d2 }
   end
 
   # map an input direction to a grid offset

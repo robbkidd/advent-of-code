@@ -17,17 +17,17 @@ class Day08
   def part1
     forest
       .trees
-      .select{ |_, tree| tree.visible }
+      .values
+      .select { |🌲| 🌲.visible }
       .count
   end
 
   # @example
   #   day.part2 #=> 8
   def part2
-    forest
-      .trees
-      .map {|_, tree| tree.scenic_score }
-      .max
+    most_scenic_tree = forest.trees.values.max_by {|🌲| 🌲.scenic_score }
+    most_scenic_tree.🏆 = true
+    most_scenic_tree.scenic_score
   end
 
   def real_input
@@ -43,8 +43,17 @@ class Day08
   INPUT
 end
 
-Tree = Struct.new(:coord, :height, :forest) do
+class Tree 
   include Comparable
+
+  attr_accessor :coord, :height, :forest, :🏆
+
+  def initialize(coord, height, forest)
+    @coord = coord
+    @height = height
+    @forest = forest
+    @🏆 = false
+  end
 
   def <=>(other)
     height <=> other.height
@@ -105,8 +114,9 @@ class Forest
   # @example
   #   forest = Forest.new(day.input)
   #   tree = forest.tree_at([3,2])
-  #   tree.coord #=> [3,2]
+  #   tree.coord  #=> [3,2]
   #   tree.height #=> 5
+  #   tree.🏆     #=> false
   def tree_at(coord)
     @trees[coord]
   end
@@ -165,6 +175,11 @@ class Forest
   end
 
   def to_s
-    "a forest (#{self.object_id})"
+    puts
+    @row_bounds.each do |row|
+      @column_bounds.each do |column|
+
+      end
+    end
   end
 end

@@ -48,4 +48,11 @@ class Day
     input_filename = "../inputs/#{self.class.name.downcase}-input.txt"
     File.read(input_filename)
   end
+
+  # for use with outputs that are periods and octothorps
+  def ugly_christmas_sweater(output)
+    output
+      .gsub(/#/, "\e[41m\e[1m#\e[0m")
+      .gsub(/\./, "\e[32m.\e[0m")
+  end
 end

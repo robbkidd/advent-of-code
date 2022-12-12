@@ -10,7 +10,7 @@ class WhichDay
   def self.klass_name
     @klass_name ||= "Day#{number}"
   end
-  
+
   def self.klass
     @klass ||= Kernel.const_get(klass_name)
   end
@@ -50,9 +50,19 @@ class Day
   end
 
   # for use with outputs that are periods and octothorps
-  def ugly_christmas_sweater(output)
+  def self.ugly_christmas_sweater(output="")
     output
       .gsub(/#/, "\e[41m\e[1m#\e[0m")
       .gsub(/\./, "\e[32m.\e[0m")
   end
+
+  def ugly_christmas_sweater(output)
+    self.class.ugly_christmas_sweater(output)
+  end
+
+  def self.clear_codes
+    "\e[H\e[2J"
+  end
+
+  def clear_codes; self.class.clear_codes ; end
 end

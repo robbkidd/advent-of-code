@@ -48,13 +48,14 @@ class HillClimbingAlgorithm
                       .map{ |dimension| Range.new(*dimension.minmax) }
   end
 
-  def shortest_path_to_goal
-    backsteps = { start.coords => nil }
-    steps = { start.coords => 0 }
+  def shortest_path_to_goal(from_hill=nil)
+    from_hill ||= start
+    backsteps = { from_hill.coords => nil }
+    steps = { from_hill.coords => 0 }
     steps.default = Float::INFINITY
 
     survey_queue = FastContainers::PriorityQueue.new(:min)
-    survey_queue.push(start.coords, 0)
+    survey_queue.push(from_hill.coords, 0)
     while (check_coords = survey_queue.pop) do
       check_hill = grid[check_coords]
       break if check_hill.goal?

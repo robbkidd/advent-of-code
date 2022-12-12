@@ -35,11 +35,13 @@ class Day10 < Day # >
     }
 
     crt = CRT.new( CPU.new( input ) )
+    STDOUT.sync = true
     (CRT::WIDTH.count * CRT::HEIGHT.count).times {
       crt.tick
       puts ugly_christmas_sweater(crt.diag)
       sleep(snooze)
     }
+    STDOUT.sync = false
   end
 
   # It's just too dang long to include in code up here.

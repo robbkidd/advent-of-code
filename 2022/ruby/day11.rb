@@ -11,8 +11,11 @@ class Day11 < Day # >
   end
 
   # @example
-  #   day.part2
+  #   day.part2 #=> 2_713_310_158
   def part2
+    mitm = MonkeyInTheMiddle.new(input, get_relief: false)
+    10_000.times { mitm.play_round }
+    mitm.monkey_business
   end
 
 
@@ -24,21 +27,29 @@ class Day11 < Day # >
     #   mitm.monkey_count #=> 4
     #   mitm.items        #=> [[79, 98], [54, 65, 75, 74], [79, 60, 97], [74]]
     #   mitm.inspections  #=> [0, 0, 0, 0]
-    def initialize(input)
+    def initialize(input, get_relief: true)
       @input = input
+      @get_relief = get_relief
+
       @items = []
       @ops = []
       @tests = []
 
       @monkey_count = notes.length
       @inspections = Array.new(@monkey_count, 0)
-      notes.each { |note|
-        sign, value = note[:op]
 
-        @ops  .push( ->(old) { [ old , value == "old" ? old : value.to_i ].reduce(&sign.to_sym) } )
-        @tests.push( ->(item) { ((item % note[:test_divisor]) == 0) ? note[:true_monkey] : note[:false_monkey] } )
+      divisors = []
+      notes.each { |note|
         @items.push( note[:items] )
+
+        sign, value = note[:op]
+        @ops  .push( ->(old) { [ old , value == "old" ? old : value.to_i ].reduce(&sign.to_sym) } )
+
+        divisors.push(note[:test_divisor])
+        @tests.push( ->(item) { ((item % note[:test_divisor]) == 0) ? note[:true_monkey] : note[:false_monkey] } )
       }
+
+      @testLCM = divisors.reduce(&:*)
     end
 
     # @example
@@ -75,10 +86,18 @@ class Day11 < Day # >
 
         while item_worry = @items[monkeys_turn].shift do
           @inspections[monkeys_turn] += 1
-          new_worry = ( i_worry_about_inspection.call(item_worry) / 3 ).floor # then monkey gets bored
+          new_worry = manage_worry( i_worry_about_inspection.call(item_worry) )
           throw_to_monkey = monkey_tests_my_worry.call(new_worry)
           @items[throw_to_monkey] << new_worry
         end
+      end
+    end
+
+    def manage_worry(worry)
+      if @get_relief
+        ( worry / 3 ).floor
+      else # manage my worry myself
+        worry % @testLCM
       end
     end
 

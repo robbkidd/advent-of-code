@@ -1,21 +1,36 @@
 require_relative 'day'
 
-Signal.trap("INT") {
-  puts "\nInterrupt! Stopping."
-  exit
-}
-
 class Day12 < Day # >
 
   # @example
   #   day.part1 #=> 31
   def part1
-    algo = HillClimbingAlgorithm.new(input)
-    path = algo.shortest_path_to_goal
-    path.length - 1 # don't include start
+    start_coords = nil
+    goal_coords  = nil
+
+    hills = Grid.new(input)
+
+    hills.parse do |coords, elevation|
+      start_coords = coords if elevation == "S"
+      goal_coords  = coords if elevation == "E"
+    end
+
+    neighbor_not_too_high = proc { |coords, neighbor_coords|
+      [ hills.at(neighbor_coords) , hills.at(coords) ]
+        .map{ |e| e.tr("S","a").tr("E","z").ord }
+        .reduce(&:-) <= 1
+    }
+
+    path_cost_increase_to_neighbor = proc { |_here, _there| 1 }
+
+    hills.edsger_do_your_thing_between(
+      start_coords, goal_coords,
+      neighbor_not_too_high,
+      path_cost_increase_to_neighbor
+    ).count - 1 # don't include the start in step count
   end
 
-  # @examples
+  # @example
   #   day.part2
   def part2
   end
@@ -29,134 +44,29 @@ class Day12 < Day # >
   INPUT
 end
 
-class HillClimbingAlgorithm
-  require "fc"
+class Grid
+  include Enumerable
 
-  attr_reader :grid, :start, :goal
+  attr_writer :to_s_proc
+  DEFAULT_TO_S_PROC = proc { |value| value.to_s }
 
-  def initialize(input=nil)
-    @grid  = Hash.new { |(r,c)| :out_of_bounds }
-    @start = :unknown_start
-    @goal  = :unknown_goal
-
-    parse_input(input)
-
-    @row_bounds,
-    @column_bounds = @grid
-                      .keys
-                      .transpose
-                      .map{ |dimension| Range.new(*dimension.minmax) }
+  def initialize(input)
+    @input = input
+    @the_grid = Hash.new { |(r,c)| raise "No data loaded." }
   end
 
-  def shortest_path_to_goal(from_hill=nil)
-    from_hill ||= start
-    backsteps = { from_hill.coords => nil }
-    steps = { from_hill.coords => 0 }
-    steps.default = Float::INFINITY
-
-    survey_queue = FastContainers::PriorityQueue.new(:min)
-    survey_queue.push(from_hill.coords, 0)
-    while (check_coords = survey_queue.pop) do
-      check_hill = grid[check_coords]
-      break if check_hill.goal?
-
-      check_hill
-        .adjacent_coords
-        .map { |neighbor_coords| grid[neighbor_coords] }
-        .reject { |other| other == :out_of_bounds }
-        .filter { |other_hill| check_hill.diff(other_hill) <= 1 }
-        .each do |hikable_hill|
-          neighbor_steps = steps[check_hill.coords] + 1
-          if neighbor_steps < steps[hikable_hill.coords]
-            steps[hikable_hill.coords] = neighbor_steps
-            backsteps[hikable_hill.coords] = check_hill.coords
-
-            weight = neighbor_steps
-            survey_queue.push(hikable_hill.coords, weight)
-          end
-        end
-    end
-
-    path = [goal.coords]
-    previous_coords = backsteps[goal.coords]
-    while previous_coords do
-      path.push(previous_coords)
-      previous_coords = backsteps[previous_coords]
-    end
-    path
+  def each
+    @the_grid.each { |coords, value| yield coords, value }
   end
 
   # @example
-  #   algo = new(Day12::EXAMPLE_INPUT)
-  #   algo.grid.class                      #=> Hash
-  #   algo.start.coords                    #=> [0,0]
-  #   algo.goal.coords                     #=> [2,5]
-  #   algo.grid.fetch([0,0]).start?        #=> true
-  #   algo.grid.fetch([0,0]) == algo.start #=> true
-  #   algo.grid.fetch([2,5]).goal?         #=> true
-  #   algo.grid.fetch([2,5]) == algo.goal  #=> true
-  def parse_input(str='')
-    str
-      .split("\n")
-      .map{|row| row.chars}
-      .each_with_index { |row, r|
-        row.each_with_index{ |encoded_elevation, c|
-          coords = [r,c]
-          hill = Hill.new(encoded_elevation, coords)
-          @grid[coords] = hill
-          if hill.start? ; start == :unknown_start ? @start = hill : raise("Uh. We already found a start.") ; end
-          if hill.goal?  ; goal  == :unknown_goal  ? @goal  = hill : raise("Uh. We already found a goal.")  ; end
-        }
-      }
-  end
-end
-
-class Hill
-  def initialize(encoded_elevation, coords=:unknown_coords)
-    @coords = coords
-    @neighbors = []
-    @encoded_elevation = encoded_elevation
-    @elevation =  case @encoded_elevation
-                  when 'S' ; ('a'.ord - 1)
-                  when 'E' ; ('z'.ord + 1)
-                  when /\A[a-z]\z/ ; @encoded_elevation.ord
-                  else raise "Your map looks funny. What's a '#{encoded_elevation}'?"
-                  end
-  end
-
-
-  attr_reader :elevation
-  def start? ; @start ||= @encoded_elevation == 'S' ; end
-  def goal?  ; @goal  ||= @encoded_elevation == 'E' ; end
-
-  def diff(other) ; other.elevation - elevation           ; end
-
-  def to_s ; @encoded_elevation ; end
-
-  # @example
-  #   hill = new('k', [10, 20])
-  #   hill.adjacent_coords #=> [ [9,20] , [11,20] , [10, 19] , [10, 21] ]
-  attr_reader :coords
-  def adjacent_coords
-    @adjacent_coords ||=
-      OFFSET_TO_DIRECTION.keys
-        .map { |offset|
-          coords
-            .zip(offset)
-            .map {|p| p.reduce(&:+)}
-        }
-  end
-
-  def direction_to(other)
-    # use fetch to throw exception if other is not adjacent
-    OFFSET_TO_DIRECTION.fetch(offset_to(other))
-  end
-
-  def offset_to(other)
-    [
-      other.coords[0] - coords[0],
-      other.coords[1] - coords[1],
-    ]
+  #   grid = new(Day12::EXAMPLE_INPUT)
+  #   grid.at([0,0])       #=> raise "No data loaded."
+  #   grid.parse
+  #   grid.at([0,0])       #=> "S"
+  #   grid.at([-100,-100]) #=> raise KeyError, "Coordinates not found on grid: [-100, -100]"
+  def at(coords)
+    @the_grid[coords]
   end
 
   OFFSET_TO_DIRECTION = {
@@ -166,4 +76,86 @@ class Hill
     [ 0, -1] => '<', # left a column
     [ 0,  1] => '>', # right a column
   }
+
+  def adjacent_to(coords)
+      OFFSET_TO_DIRECTION.keys
+        .map { |offset|
+          coords
+            .zip(offset)
+            .map {|p| p.reduce(&:+)}
+        }
+        .select { |r,c| @the_grid.has_key?([r,c]) }
+  end
+
+  def edsger_do_your_thing_between(start, goal, filter_proc, compute_cost_proc)
+    backsteps = { start => nil }
+    costs = { start => 0 }
+    costs.default = Float::INFINITY
+
+    survey_queue = [[0,start]]
+    while (_cost, check_pos = survey_queue.pop) do
+      break if check_pos == goal
+
+      adjacent_to(check_pos)
+        .filter{ |neighbor_coords| filter_proc.call(check_pos, neighbor_coords) }
+        .each do |neighbor|
+          neighbor_cost = costs[check_pos] + compute_cost_proc.call(check_pos, neighbor)
+
+          if neighbor_cost < costs[neighbor]
+            costs[neighbor] = neighbor_cost
+            backsteps[neighbor] = check_pos
+
+            survey_queue.push([neighbor_cost, neighbor])
+            survey_queue
+              .sort_by! { |cost, _pos| cost }
+              .reverse!
+          end
+        end
+    end
+    path(backsteps, goal)
+  end
+
+  def path(backsteps, goal)
+    path = [goal]
+    step_backwards = backsteps[goal]
+    while step_backwards do
+      path.push(step_backwards)
+      step_backwards = backsteps[step_backwards]
+    end
+    path
+  end
+
+  def parse
+    @input
+      .split("\n")
+      .map { |line| line.chars }
+      .each_with_index do |row, r|
+        row.each_with_index do |char, c|
+          @the_grid[[r,c]] = char
+          yield [r,c], char if block_given?
+        end
+      end
+
+    @the_grid.default_proc = proc {|_hash, key| raise KeyError, "Coordinates not found on grid: #{key}"}
+
+    @row_bounds,
+    @column_bounds = @the_grid
+                      .keys
+                      .transpose
+                      .map{ |dimension| Range.new(*dimension.minmax) }
+
+    self
+  end
+
+  # @example
+  #   grid = new(Day12::EXAMPLE_INPUT).parse
+  #   grid.to_s  #=> Day12::EXAMPLE_INPUT
+  def to_s
+    transform_proc = @to_s_proc || DEFAULT_TO_S_PROC
+    @row_bounds.map { |row|
+      @column_bounds.map { |column|
+        transform_proc.call( at([row, column]) )
+      }.join("")
+    }.join("\n") + "\n"
+  end
 end

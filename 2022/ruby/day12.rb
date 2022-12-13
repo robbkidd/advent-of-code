@@ -2,37 +2,58 @@ require_relative 'day'
 
 class Day12 < Day # >
 
-  # @example
-  #   day.part1 #=> 31
-  def part1
-    start_coords = nil
-    goal_coords  = nil
+  def initialize(*)
+    super
+    @start_coords = nil
+    @goal_coords  = nil
 
-    hills = Grid.new(input)
+    @hills = Grid.new(input)
 
-    hills.parse do |coords, elevation|
-      start_coords = coords if elevation == "S"
-      goal_coords  = coords if elevation == "E"
+    @hills.parse do |coords, elevation|
+      @start_coords = coords if elevation == "S"
+      @goal_coords  = coords if elevation == "E"
     end
 
-    neighbor_not_too_high = proc { |coords, neighbor_coords|
-      [ hills.at(neighbor_coords) , hills.at(coords) ]
+    @neighbor_not_too_high = proc { |coords, neighbor_coords|
+      [ @hills.at(neighbor_coords) , @hills.at(coords) ]
         .map{ |e| e.tr("S","a").tr("E","z").ord }
         .reduce(&:-) <= 1
     }
 
-    path_cost_increase_to_neighbor = proc { |_here, _there| 1 }
-
-    hills.edsger_do_your_thing_between(
-      start_coords, goal_coords,
-      neighbor_not_too_high,
-      path_cost_increase_to_neighbor
-    ).count - 1 # don't include the start in step count
+    @path_cost_increase_to_neighbor = proc { |_here, _there| 1 }
   end
 
   # @example
-  #   day.part2
+  #   day.part1 #=> 31
+  def part1
+    shortest_path_to_goal =
+      @hills.edsger_do_your_thing_between(
+        @start_coords, @goal_coords,
+        @neighbor_not_too_high,
+        @path_cost_increase_to_neighbor
+      )
+
+    shortest_path_to_goal.count - 1 # don't include the start in step count
+  end
+
+  # @example
+  #   day.part2 #=> 29
   def part2
+    lowest_coords =
+      @hills
+        .select { |coords, elevation| ["S", "a"].include?(elevation) }
+        .map { |coords,_| coords }
+
+    lowest_coords
+      .map { |coords|
+        @hills.edsger_do_your_thing_between(
+          coords, @goal_coords,
+          @neighbor_not_too_high,
+          @path_cost_increase_to_neighbor
+        )
+      }
+      .min_by(&:length)
+      .length - 1 # don't include the start in step count
   end
 
   EXAMPLE_INPUT = <<~INPUT

@@ -27,8 +27,10 @@ class Day01 < Day # >
   #   day.recover_calibration_value('a1b2c3d4e5f') #=> 15
   #   day.recover_calibration_value('treb7uchet') #=> 77
   def recover_calibration_value(line)
-    digits = line.scan(/\d/)
-    [ digits[0], digits[-1] ].join().to_i
+    [
+      line.slice(/\d/),
+      line.reverse.slice(/\d/)
+    ].join().to_i
   end
 
   # @example
@@ -42,22 +44,29 @@ class Day01 < Day # >
   #   day.recover_spelled_out_calibration_value('7pqrstsixteen') #=> 76
   #   day.recover_spelled_out_calibration_value('twone') #=> 21
   def recover_spelled_out_calibration_value(line)
-    recover_calibration_value(
-      line.tap { |l| WORDS_TO_DIGITS.each {|w,d| l.gsub!(w, d) } }
-    )
+    first_match = line.slice(DIGIT_WORDS_REGEX)
+    first = WORDS_TO_DIGITS.fetch(first_match, first_match)
+
+    last_match = line.reverse.slice(DIGIT_WORDS_REVERSED_REGEX)
+    last = WORDS_TO_DIGITS.fetch(last_match.reverse, last_match)
+
+    [first, last].join().to_i
   end
 
   WORDS_TO_DIGITS = {
-    'one' => 'o1e',
-    'two' => 't2o',
-    'three' => 't3e',
-    'four' => 'f4r',
-    'five' => 'f5e',
-    'six' => 's6x',
-    'seven' => 's7n',
-    'eight' => 'e8t',
-    'nine' => 'n9e',
+    'one' => '1',
+    'two' => '2',
+    'three' => '3',
+    'four' => '4',
+    'five' => '5',
+    'six' => '6',
+    'seven' => '7',
+    'eight' => '8',
+    'nine' => '9',
   }
+
+  DIGIT_WORDS_REGEX = /(\d|#{WORDS_TO_DIGITS.keys.join('|')})/
+  DIGIT_WORDS_REVERSED_REGEX = /(\d|#{WORDS_TO_DIGITS.keys.join('|').reverse})/
 
   EXAMPLE_INPUT = <<~INPUT
     1abc2

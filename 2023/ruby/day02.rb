@@ -12,11 +12,11 @@ class Day02 < Day # >
         record[game_id] = sets
       }
       .reject { |_game_id, sets|             # reject any game wherein ...
-        sets.map { |set|                     # any of its sets has too many of a color
+        sets.any? { |set|                    # any set has too many of a color
           set.fetch(:red, 0) > 12 ||
             set.fetch(:green, 0) > 13 ||
             set.fetch(:blue, 0) > 14
-        }.any?
+        }
       }
       .keys                                  # consider only the game IDs
       .reduce(:+)                            # and add them up

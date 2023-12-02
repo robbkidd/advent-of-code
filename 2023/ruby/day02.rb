@@ -22,7 +22,29 @@ class Day02 < Day # >
       .reduce(:+)
   end
 
+  # @example
+  #   day.part2 #=> 2286
   def part2
+    input
+      .split("\n")
+      .each_with_object({}) { |line, record|
+        game_id, sets = parse(line)
+        record[game_id] = sets
+      }
+      .map { |_game_id, sets|
+        sets.reduce { |memo, set|
+          [:red, :green, :blue].each do |color|
+            memo[color] = [memo.fetch(color, 0), set.fetch(color, 0)].max
+          end
+          memo
+        }
+      }
+      .map { |color_minimums|
+        color_minimums
+          .values
+          .reduce(:*)
+      }
+      .reduce(:+)
   end
 
   # @example

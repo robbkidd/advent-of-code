@@ -7,19 +7,19 @@ class Day02 < Day # >
   def part1
     input
       .split("\n")
-      .each_with_object({}) { |line, record|
+      .each_with_object({}) { |line, record| # create the record of the games
         game_id, sets = parse(line)
         record[game_id] = sets
       }
-      .reject { |_game_id, sets|
-        sets.map { |set|
+      .reject { |_game_id, sets|             # reject any game wherein ...
+        sets.map { |set|                     # any of its sets has too many of a color
           set.fetch(:red, 0) > 12 ||
             set.fetch(:green, 0) > 13 ||
             set.fetch(:blue, 0) > 14
         }.any?
       }
-      .keys
-      .reduce(:+)
+      .keys                                  # consider only the game IDs
+      .reduce(:+)                            # and add them up
   end
 
   # @example
@@ -27,24 +27,24 @@ class Day02 < Day # >
   def part2
     input
       .split("\n")
-      .each_with_object({}) { |line, record|
+      .each_with_object({}) { |line, record| # create the record of the games
         game_id, sets = parse(line)
         record[game_id] = sets
       }
-      .map { |_game_id, sets|
-        sets.reduce { |memo, set|
+      .map { |_game_id, sets|                # for each game (and discarding the game ID)
+        sets.reduce { |memo, set|            # find maximum of each color seen in that game
           [:red, :green, :blue].each do |color|
             memo[color] = [memo.fetch(color, 0), set.fetch(color, 0)].max
           end
           memo
         }
       }
-      .map { |color_minimums|
+      .map { |color_minimums|                # ..which are the minimum needed to play that game
         color_minimums
-          .values
-          .reduce(:*)
+          .values                            # ignoring the color names
+          .reduce(:*)                        # compute the power for this game's minimum set
       }
-      .reduce(:+)
+      .reduce(:+)                            # and add them up
   end
 
   # @example

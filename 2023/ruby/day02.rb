@@ -13,9 +13,9 @@ class Day02 < Day # >
       }
       .reject { |_game_id, sets|             # reject any game wherein ...
         sets.any? { |set|                    # any set has too many of a color
-          set.fetch(:red, 0) > 12 ||
-            set.fetch(:green, 0) > 13 ||
-            set.fetch(:blue, 0) > 14
+          set[:red] > 12 ||
+            set[:green] > 13 ||
+            set[:blue] > 14
         }
       }
       .keys                                  # consider only the game IDs
@@ -34,7 +34,7 @@ class Day02 < Day # >
       .map { |_game_id, sets|                # for each game (and discarding the game ID)
         sets.reduce { |memo, set|            # find maximum of each color seen in that game
           [:red, :green, :blue].each do |color|
-            memo[color] = [memo.fetch(color, 0), set.fetch(color, 0)].max
+            memo[color] = [memo[color], set[color]].max
           end
           memo
         }
@@ -56,12 +56,16 @@ class Day02 < Day # >
     sets = sets
       .split('; ')
       .map { |set|
+        set_hash = Hash.new(0)
+
         set
           .split(", ")
-          .map { |cubes|
+          .each { |cubes|
             count, color = cubes.split(" ")
-            [color.to_sym, count.to_i]
-          }.to_h
+            set_hash[color.to_sym] = count.to_i
+          }
+
+        set_hash
       }
 
     [id, sets]

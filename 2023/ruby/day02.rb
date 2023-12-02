@@ -56,7 +56,7 @@ class Day02 < Day # >
     sets = sets
       .split('; ')
       .map { |set|
-        set_hash = Hash.new(0)
+        set_hash = Hash.new { |_hash, key| [:blue, :green, :red].include?(key) ? 0 : raise("unknown color '#{key.inspect}'") }
 
         set
           .split(", ")

@@ -5,27 +5,47 @@ class Day04 < Day # >
   # @example
   #   day.part1 #=> 13
   def part1
-    input
-      .split("\n")
-      .map { |line| line.split(/\:\s+/)[1] }
-      .map { |scratch_offs|
-            scratch_offs
-              .split(/\s+\|\s+/)
-              .map { |numbers|
-                numbers
-                  .split(/\s+/)
-                  .map(&:to_i)
-              }
-              .reduce(&:&)
-              .length
-      }
+    card_match_wins
       .map { |matches| 0 < matches ? 2**(matches-1) : 0 }
       .reduce(&:+)
   end
 
   # @example
-  #   day.part2 #=> 'how are you'
+  #   day.part2 #=> 30
   def part2
+    copies = Array.new(card_match_wins.length, 0)
+
+    card_match_wins
+      .each_with_index do |wins, card|
+        copies[card] = copies[card] + 1   # count the original
+
+        next unless wins > 0              # and that's it unless it's a winner
+
+        ((card+1)..(card+wins)).each do |win|        # for each next card won
+          copies[win] = copies[win] + (copies[card]) # add to that card's count however many of this card we have
+        end
+      end
+
+    copies
+      .reduce(&:+)
+  end
+
+  def card_match_wins
+    @card_match_wins ||=
+      input
+        .split("\n")
+        .map { |line| line.split(/\:\s+/)[1] }
+        .map { |scratch_offs|
+              scratch_offs
+                .split(/\s+\|\s+/)
+                .map { |numbers|
+                  numbers
+                    .split(/\s+/)
+                    .map(&:to_i)
+                }
+                .reduce(&:&)
+                .length
+        }
   end
 
   EXAMPLE_INPUT = <<~INPUT

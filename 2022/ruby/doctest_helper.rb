@@ -1,3 +1,4 @@
+require "grid"
 require "day"
 require WhichDay.klass_name.downcase
 

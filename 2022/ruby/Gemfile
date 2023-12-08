@@ -2,9 +2,13 @@
 
 source "https://rubygems.org"
 
-git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
+git_source(:github) { |repo_name| "https://github.com/#{repo_name}" }
 
 gem "rake"
 gem "pry"
 gem "yard-doctest"
+gem "rspec"
 gem "priority_queue_cxx"
+
+gem "debug"
+gem "ruby-lsp", "~> 0.3.7", group: :development

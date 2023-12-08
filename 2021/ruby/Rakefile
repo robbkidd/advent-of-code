@@ -1,8 +1,8 @@
-require 'erb'
+require "erb"
 
-task :default => :test
+task default: :test
 
-def what_day(arg=nil)
+def what_day(arg = nil)
   if arg
     arg
   else
@@ -11,7 +11,7 @@ def what_day(arg=nil)
     else
       Time.now.day
     end
-  end.to_s.rjust(2, '0')
+  end.to_s.rjust(2, "0")
 end
 
 task :run, [:day] do |t, args|
@@ -25,17 +25,15 @@ task :test, [:day] do |t, args|
   day = what_day(args[:day])
   puts "Wooo! Let's test Day#{day}!\n\n"
 
-  File.open('./doctest_helper.rb', 'w') do |file|
-    file.write <<~TEST_HELPER
+  File.open("./doctest_helper.rb", "w") { |file| file.write <<~TEST_HELPER }
       require 'day#{day}'
 
       def day
         @day ||= Day#{day}.new(Day#{day}::EXAMPLE_INPUT)
       end
     TEST_HELPER
-  end
 
-  abort unless system("yard doctest -v ./day#{day}.rb")
+  abort unless system("yard doctest -v ./day#{day}.rb #{ENV["TESTOPTS"]}}")
 end
 
 task :new do
@@ -43,7 +41,7 @@ task :new do
   Rake::Task["day#{day}"].invoke
 end
 
-rule ( /^day\d\d$/ ) do |task|
+rule (/^day\d\d$/) do |task|
   output_file = "./#{task.name}.rb"
   if File.exist?(output_file)
     puts "🛑 No. I'm protecting you from yourself. That file already exists."
@@ -51,8 +49,7 @@ rule ( /^day\d\d$/ ) do |task|
     puts "🎶 bring on the newwww daaaaay 🎶"
     File.write(
       output_file,
-      ERB.new(File.read('./template.rb.erb'))
-         .result_with_hash(day: task.name)
+      ERB.new(File.read("./template.rb.erb")).result_with_hash(day: task.name)
     )
     input_file = "../inputs/#{task.name}-input.txt"
     system("pbpaste > #{input_file}")

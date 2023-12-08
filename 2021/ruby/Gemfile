@@ -4,6 +4,9 @@ source "https://rubygems.org"
 
 git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
 
+gem "rake"
 gem "pry"
 gem "yard-doctest"
 gem "priority_queue_cxx"
+
+gem "ruby-lsp", "~> 0.3.7", :group => :development

@@ -34,8 +34,8 @@ class Day05 < Day # >
         if lines.first.match(/^seeds: \d/)
           maps["seeds"] = lines.first.split(": ")[1].split(/\s+/).map(&:to_i)
         else
-          map_key = lines.shift.split(" ")[0]
-          maps[map_key] = Mapper.new(lines)
+          map_title = lines.shift.split(" ")[0]
+          maps[map_title] = Mapper.new(map_title, lines)
         end
       end
 
@@ -46,36 +46,24 @@ class Day05 < Day # >
   #   mapper = Day05::Mapper.new(["50 98 2", "52 50 48"])
   #   mapper.convert(79) #=> 81
   class Mapper
-    attr_reader :converters
+    attr_reader :map_title, :maps
 
-    def initialize(map_lines)
-      @converters = []
-
-      map_lines
-        .each do |line|
-          dest_start, source_start, range_length = line.split(" ").map(&:to_i)
-          source_range = Range.new(source_start, (source_start+range_length-1))
-          converters << proc do |input|
-            if source_range.cover?(input)
-              dest_start + (input - source_start)
-            else
-              nil
-            end
-          end
-        end
+    def initialize(map_title, maps)
+      @map_title = map_title
+      @maps = maps
+                .map { |line| line.split(" ").map(&:to_i) }
+                .map { |dest_start, source_start, range_length|
+                  [ Range.new(source_start, (source_start+range_length-1)), dest_start ]
+                }
     end
 
     def convert(input)
-      conversions = converters.map {|c| c.call(input) }.compact
-
-      case conversions.length
-      when 0
-        input
-      when 1
-        conversions.first
-      else
-        raise("more than one map range matched")
+      maps.each do |source_range, dest_start|
+        next unless source_range.cover?(input)
+        return dest_start + (input - source_range.min)
       end
+
+      return input
     end
   end
 

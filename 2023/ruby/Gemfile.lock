@@ -1,6 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    benchmark-ips (2.12.0)
     coderay (1.1.3)
     debug (1.8.0)
       irb (>= 1.5.0)
@@ -55,6 +56,7 @@ PLATFORMS
   arm64-darwin-22
 
 DEPENDENCIES
+  benchmark-ips
   debug
   priority_queue_cxx
   pry

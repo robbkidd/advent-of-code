@@ -21,13 +21,48 @@ class Day06 < Day # >
   # @example
   #   day.part2 #=> 71503
   def part2
-    time, record_distance = input
-                              .each_line
-                              .map { |line| line.scan(/\d+/).join('').to_i }
+    # part2_map_reduce
+    part2_split
+  end
+
+  def part2_map_reduce
+    time, record_distance = input_part2
 
     1.upto(time)
       .select { |hold| hold * (time-hold) > record_distance }
       .count
+  end
+
+  def part2_split
+    time, record_distance = input_part2
+
+    [
+      (time/2+1).upto(time),
+      (time/2).downto(1)
+    ]
+    .map { |times|
+      Thread.new {
+        wins = 0
+        times
+          .each do |hold|
+            if hold * (time-hold) > record_distance
+              wins += 1
+            elsif wins > 0
+              break
+            end
+          end
+        wins
+      }
+    }
+    .map(&:value)
+    .reduce(&:+)
+  end
+
+  def input_part2
+    @input_part2 ||=
+      input
+        .each_line
+        .map { |line| line.scan(/\d+/).join('').to_i }
   end
 
   EXAMPLE_INPUT = <<~INPUT

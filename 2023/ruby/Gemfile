@@ -9,6 +9,7 @@ gem "pry"
 gem "yard-doctest"
 gem "rspec"
 gem "priority_queue_cxx"
+gem "benchmark-ips"
 
 gem "debug"
 gem "ruby-lsp", "~> 0.3.7", group: :development

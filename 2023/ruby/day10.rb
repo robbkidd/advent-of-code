@@ -47,7 +47,10 @@ class PipeMaze
     @input = input
     @start = nil
     @grid = Grid.new(input)
-    @grid.parse { |coords, value| @start = coords if value == "S" }
+    @grid.parse { |coords, value|
+      @start = coords if value == "S"
+      @grid.set(coords, value.tr('|\-LJ7F.S', "│─└┘┐┌░╳"))
+    }
   end
 
   def loop_path
@@ -109,35 +112,36 @@ class PipeMaze
 
   # [step travel direction, pipe type] => next step travel direction
   PIPE_FLOWS = {
+    # "│─└┘┐┌░╳"
     # | is a vertical pipe connecting north and south.
-    [:north, "|"] => :north,
-    [:south, "|"] => :south,
+    [:north, "│"] => :north,
+    [:south, "│"] => :south,
     # - is a horizontal pipe connecting east and west.
-    [:east, "-"] => :east,
-    [:west, "-"] => :west,
+    [:east, "─"] => :east,
+    [:west, "─"] => :west,
     # L is a 90-degree bend connecting north and east.
-    [:south, "L"] => :east,
-    [:west, "L"] => :north,
+    [:south, "└"] => :east,
+    [:west, "└"] => :north,
     # J is a 90-degree bend connecting north and west.
-    [:south, "J"] => :west,
-    [:east, "J"] => :north,
+    [:south, "┘"] => :west,
+    [:east, "┘"] => :north,
     # 7 is a 90-degree bend connecting south and west.
-    [:east, "7"] => :south,
-    [:north, "7"] => :west,
+    [:east, "┐"] => :south,
+    [:north, "┐"] => :west,
     # F is a 90-degree bend connecting south and east.
-    [:west, "F"] => :south,
-    [:north, "F"] => :east,
+    [:west, "┌"] => :south,
+    [:north, "┌"] => :east,
     # . is ground; there is no pipe in this tile.
-    "." => :cannot_enter_ground,
+    "░" => :cannot_enter_ground,
     # S is the starting position of the animal;
     # there is a pipe on this tile, but your sketch doesn't
     # show what shape the pipe has.
     # Let start be entered from any direction and then
     # there are no further steps.
-    [:north, "S"] => :stop,
-    [:south, "S"] => :stop,
-    [:east, "S"] => :stop,
-    [:west, "S"] => :stop,
+    [:north, "╳"] => :stop,
+    [:south, "╳"] => :stop,
+    [:east, "╳"] => :stop,
+    [:west, "╳"] => :stop,
   }
 
   def to_ugly_sweater

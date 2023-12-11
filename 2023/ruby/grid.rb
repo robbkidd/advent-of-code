@@ -170,9 +170,19 @@ class Grid
   # @example
   #
   def parse
-    @input
-      .split("\n")
-      .map { |line| line.chars }
+    split_input =
+      case @input
+      when Array # assume the lines and chars have been split already
+        @input
+      when String
+        @input
+          .split("\n")
+          .map { |line| line.chars }
+      else
+        raise("don't know how to parse #{input.inspect}")
+      end
+
+    split_input
       .each_with_index do |row, r|
         row.each_with_index do |char, c|
           @the_grid[[r, c]] = char

@@ -6,18 +6,28 @@ class Day11 < Day # >
   # @example
   #   day.part1 #=> 374
   def part1
-    universe = CosmicExpansion.new(input)
+    @universe ||= CosmicExpansion.new(input)
 
-    universe
-      .galaxies
-      .combination(2)
-      .map { |here, there| universe.distance_between(here, there) }
+    @universe
+      .shortest_distances(expansion_rate: 2)
       .reduce(&:+)
   end
 
-  # @example
-  # day.part2 #=> 'how are you'
+  # @example 2x
+  #   universe = CosmicExpansion.new(Day11::EXAMPLE_INPUT)
+  #   universe.shortest_distances(expansion_rate: 2).reduce(&:+) #=> 374
+  # @example 10x
+  #   universe = CosmicExpansion.new(Day11::EXAMPLE_INPUT)
+  #   universe.shortest_distances(expansion_rate: 10).reduce(&:+) #=> 1030
+  # @example 100x
+  #   universe = CosmicExpansion.new(Day11::EXAMPLE_INPUT)
+  #   universe.shortest_distances(expansion_rate: 100).reduce(&:+) #=> 8410
   def part2
+    @universe ||= CosmicExpansion.new(input)
+
+    @universe
+      .shortest_distances(expansion_rate: 1_000_000)
+      .reduce(&:+)
   end
 
   EXAMPLE_INPUT = <<~INPUT
@@ -50,27 +60,75 @@ class Day11 < Day # >
 end
 
 class CosmicExpansion
-  attr_reader :galaxies
-
   def initialize(input)
     @input = input
+    @empty_rows = nil
+    @empty_columns = nil
     @galaxies = []
-    @grid =
-      Grid.new(
-        expand_cosmically(
-          scan(input)
-        )
-      )
-    @grid.parse do |coords, value|
-      galaxies << coords if value == GALAXY
-    end
+    @occupied_rows = []
+    @occupied_columns = []
+
+    input
+      .split("\n")
+      .map(&:chars)
+      .each_with_index do |row, r|
+        row.each_with_index do |char, c|
+          if char == '#'
+            @occupied_rows << r
+            @occupied_columns << c
+            @galaxies << [r, c]
+          end
+        end
+      end
   end
 
-  EMPTY_SPACE = '.'
-  GALAXY = '#'
 
-  def distance_between(here, there)
-    @grid.manhattan_distance(here, there)
+  def shortest_distances(expansion_rate: 1)
+    expand_by(expansion_rate)
+      .combination(2)
+      .map { |here, there|
+        # like in manhattan
+        (here[0] - there[0]).abs + (here[1] - there[1]).abs
+      }
+  end
+
+  def expand_by(expansion_rate)
+    galaxies
+      .map { |coords|
+        row, column = coords
+        [
+          row + ((empty_rows.select{|r| r < row}).length * (expansion_rate-1)),         # -1 because the original row/column is
+          column + ((empty_columns.select{|c| c < column}).length * (expansion_rate-1)) # already included in original coord
+        ]
+      }
+  end
+
+  def empty_rows
+    @empty_rows ||= Range.new(*@occupied_rows.minmax).entries - @occupied_rows
+  end
+
+  def empty_columns
+    @empty_columns ||= Range.new(*@occupied_columns.minmax).entries - @occupied_columns
+  end
+
+  def galaxies
+    return @galaxies if @galaxies
+
+    @galaxies = []
+    @occupied_rows = []
+    @occupied_columns = []
+
+    @scanned_image
+      .each_with_index do |row, r|
+        row.each_with_index do |char, c|
+          if char == GALAXY
+            @occupied_rows << r
+            @occupied_columns << c
+            @galaxies << [r, c]
+          end
+        end
+      end
+    @galaxies
   end
 
   # @example
@@ -81,33 +139,5 @@ class CosmicExpansion
     image
       .split("\n")
       .map(&:chars)
-  end
-
-  # @example
-  #  scanned_image = day.scan(Day11::EXAMPLE_INPUT)
-  #  input_expanded = day.expand_cosmically(scanned_image)
-  #  input_expanded #=> day.scan(Day11::EXPANDED_INPUT)
-  def expand_cosmically(scanned_image)
-    # dupe empty-space rows
-    expanded_rows = []
-    scanned_image
-      .each do |row|
-        n = row.all?(EMPTY_SPACE) ? 2 : 1
-        n.times { expanded_rows << row }
-      end
-
-    # pivot the table, dupe empty-space columns
-    expanded_columns = []
-    expanded_rows
-      .transpose
-      .each do |column|
-        n = column.all?(EMPTY_SPACE) ? 2 : 1
-        n.times { expanded_columns << column }
-      end
-
-    # pivot things back around to original orientation
-    # gotta get rid of this entirely for part 2, though
-    3.times { expanded_columns = expanded_columns.transpose }
-    expanded_columns
   end
 end

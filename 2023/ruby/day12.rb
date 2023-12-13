@@ -1,5 +1,4 @@
 require_relative 'day'
-require_relative 'ugly_sweater'
 
 class Day12 < Day # >
 
@@ -44,6 +43,7 @@ class HotSprings
 
   def initialize(input="")
     @input = input
+    @scan_cache = Hash.new
     @rows =
       @input
         .split("\n")
@@ -83,51 +83,61 @@ class HotSprings
   end
 
   # @example 1st row
-  #   new.scan("???.###", [1,1,3]) #=> 1
+  #   ♨️ = new("???.### 1,1,3")
+  #   ♨️.rows.map { ♨️.scan(*_1) }.first #=> 1
+  #   ♨️.unfold.map{ new.scan(*_1) }.first #=> 1
   #
   # @example 2nd row
-  #   new.scan(".??..??...?##.", [1,1,3]) #=> 4
+  #   ♨️ = new(".??..??...?##. 1,1,3")
+  #   ♨️.rows.map { ♨️.scan(*_1) }.first #=> 4
+  #   ♨️.unfold.map{ new.scan(*_1) }.first #=> 16384
   #
   # @example 3rd row
-  #   new.scan("?#?#?#?#?#?#?#?", [1,3,1,6]) #=> 1
+  #   ♨️ = new("?#?#?#?#?#?#?#? 1,3,1,6")
+  #   ♨️.rows.map { ♨️.scan(*_1) }.first #=> 1
+  #   ♨️.unfold.map{ new.scan(*_1) }.first #=> 1
   #
   # @example 4th row
-  #   new.scan("????.#...#...", [4,1,1]) #=> 1
+  #   ♨️ = new("????.#...#... 4,1,1")
+  #   ♨️.rows.map { ♨️.scan(*_1) }.first #=> 1
+  #   ♨️.unfold.map{ new.scan(*_1) }.first #=> 16
   #
   # @example 5th row
-  #   new.scan("????.######..#####.", [1,6,5]) #=> 4
+  #   ♨️ = new("????.######..#####. 1,6,5")
+  #   ♨️.rows.map { ♨️.scan(*_1) }.first #=> 4
+  #   ♨️.unfold.map{ new.scan(*_1) }.first #=> 2500
   #
   # @example 6th row
-  #   new.scan("?###????????", [3,2,1]) #=> 10
+  #   ♨️ = new("?###???????? 3,2,1")
+  #   ♨️.rows.map { ♨️.scan(*_1) }.first #=> 10
+  #   ♨️.unfold.map{ new.scan(*_1) }.first #=> 506250
   def scan(springs, counts, previous_maybe_damaged=false)
-    # what's left shouldn't be damaged if the trusted counts say there are no more damaged springs
-    return (springs.include?(DAMAGED) ? 0 : 1) if counts.empty?
+    return @scan_cache.fetch([springs, counts, previous_maybe_damaged]) { |key|
+      @scan_cache[key] =
+        if counts.empty?
+          # what's left shouldn't be damaged if the trusted counts say there are no more damaged springs
+          springs.include?(DAMAGED) ? 0 : 1
 
-    # the trusted counts shouldn't say there are more damaged when we're out of springs to evaluate
-    return (counts.reduce(&:+).positive? ? 0 : 1) if springs.empty?
+        elsif springs.empty?
+          # the trusted counts shouldn't say there are more damaged when we're out of springs to evaluate
+          counts.reduce(&:+).positive? ? 0 : 1
 
-    # OK, we gotta compute stuff ...
+        elsif counts[0] == 0
+          maybe_working?(springs[0]) ? scan(springs[1..], counts[1..], false) : 0
 
-    current_spring, remaining_springs = springs[0], springs[1..]
-    current_count, remaining_counts = counts[0], counts[1..]
-    decremented_counts = ([current_count-1] + remaining_counts)
+        elsif previous_maybe_damaged
+          maybe_damaged?(springs[0]) ? scan(springs[1..], ([counts[0]-1] + counts[1..]), true) : 0
 
-    case
-    when current_count == 0
-      return maybe_working?(current_spring) ? scan(remaining_springs, remaining_counts, false) : 0
+        elsif springs[0] == DAMAGED
+          scan(springs[1..], ([counts[0]-1] + counts[1..]), true)
 
-    when previous_maybe_damaged
-      return maybe_damaged?(current_spring) ? scan(remaining_springs, decremented_counts, true) : 0
+        elsif springs[0] == WORKING
+          scan(springs[1..], counts, false)
 
-    when current_spring == DAMAGED
-      return scan(remaining_springs, decremented_counts, true)
-
-    when current_spring == WORKING
-      return scan(remaining_springs, counts, false)
-
-    else
-      return scan(remaining_springs, counts, false) +           # run the scenarios where first spring is working
-              scan(remaining_springs, decremented_counts, true) # and the scenarios where first is/might-be broken
-    end
+        else
+          scan(springs[1..], counts, false) +           # run the scenarios where first spring is working
+                  scan(springs[1..], ([counts[0]-1] + counts[1..]), true) # and the scenarios where first is/might-be broken
+        end
+    }
   end
 end

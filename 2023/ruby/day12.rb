@@ -16,9 +16,17 @@ class Day12 < Day # >
       .reduce(&:+)
   end
 
-  # example
-  # #day.part2 #=> 'how are you'
+  # @example
+  #   day.part2 #=> 525152
   def part2
+    @hot_springs ||= HotSprings.new(input)
+
+    @hot_springs
+      .unfold
+      .map { |even_more_springs, even_more_damaged_counts|
+        @hot_springs.scan(even_more_springs, even_more_damaged_counts)
+      }
+      .reduce(&:+)
   end
 
   EXAMPLE_INPUT = <<~INPUT
@@ -46,6 +54,20 @@ class HotSprings
             damaged_counts.split(",").map(&:to_i)
           ]
         }
+  end
+
+  # @example super simple
+  #   new(".# 1").unfold #=> [ [".#?.#?.#?.#?.#", [1,1,1,1,1]] ]
+  # @example 1st row
+  #   new("???.### 1,1,3").unfold #=> [ ["???.###????.###????.###????.###????.###", [1,1,3,1,1,3,1,1,3,1,1,3,1,1,3]] ]
+  def unfold
+    rows
+      .map { |springs, damaged_counts|
+        [
+          ([springs] * 5).join("?"),
+          damaged_counts * 5,
+        ]
+      }
   end
 
   WORKING = "."

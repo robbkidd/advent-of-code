@@ -11,9 +11,39 @@ class Day16 < Day # >
     c.energized_count
   end
 
-  # example
-  #   day.part2 #=> '?'
+  # @example
+  #   day.part2 #=> 51
   def part2
+    energizes_from = {}
+
+    ref = Contraption.new(input)
+    ref.grid
+      .row_bounds
+      .map{ |r| [[r, -1], [r, ref.grid.column_bounds.size]] }
+      .each do |enter_from_left, enter_from_right|
+        from_left_attempt = Contraption.new(input)
+        from_left_attempt.beam_bounces_around(enter_from_left, Contraption::RIGHTWARDS)
+        energizes_from[enter_from_left] = from_left_attempt.energized_count
+
+        from_right_attempt = Contraption.new(input)
+        from_right_attempt.beam_bounces_around(enter_from_right, Contraption::LEFTWARDS)
+        energizes_from[enter_from_right] = from_right_attempt.energized_count
+      end
+
+    ref.grid
+      .column_bounds
+      .map{ |c| [[-1, c], [ref.grid.row_bounds.size, c]] }
+      .each do |enter_from_top, enter_from_bottom|
+        from_top_attempt = Contraption.new(input)
+        from_top_attempt.beam_bounces_around(enter_from_top, Contraption::DOWNWARDS)
+        energizes_from[enter_from_top] = from_top_attempt.energized_count
+
+        from_bottom_attempt = Contraption.new(input)
+        from_bottom_attempt.beam_bounces_around(enter_from_bottom, Contraption::UPWARDS)
+        energizes_from[enter_from_bottom] = from_bottom_attempt.energized_count
+      end
+
+    energizes_from.values.max
   end
 
   # slashes in the input are messing with my routine today

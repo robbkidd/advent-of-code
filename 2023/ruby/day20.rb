@@ -9,16 +9,44 @@ class Day20 < Day # >
   #   day = Day20.new(MORE_INTERESTING_EXAMPLE_INPUT)
   #   day.part1 #=> 11_687_500
   def part1
-    PulsePropagation
-      .new(input)
-      .push_the_button(1_000)[:counts]
-      .values
-      .reduce(&:*)
+    pulprop = PulsePropagation.new(input)
+
+    wiretap = {low: 0, high: 0}
+    1_000.times do
+      pulprop.push_the_button do |message|
+        wiretap[message[:pulse]] += 1
+      end
+    end
+
+    wiretap.values.reduce(&:*)
   end
 
   # example
   #   day.part2 #=> 'how are you'
   def part2
+    pulprop = PulsePropagation.new(input)
+
+    final_module_inputs =
+      pulprop
+        .modules
+        .filter_map{ |_name, mod| mod.inputs.keys if mod.destinations.include?('rx')}
+        .flatten
+
+    wiretap = {}
+    button_pushes = 0
+
+    until (final_module_inputs - wiretap.keys) == [] do
+      button_pushes += 1
+      pulprop.push_the_button do |message|
+        if final_module_inputs.include?(message[:sender]) && message[:pulse] == :high
+          wiretap[message[:sender]] ||= button_pushes
+        end
+      end
+    end
+
+    wiretap
+      .values
+      .reduce(1,:lcm)
   end
 
   EXAMPLE_INPUT = <<~INPUT
@@ -97,7 +125,7 @@ class PulsePropagation
         mod.destinations
           .each do |dest_name|
             if modules[dest_name] && modules[dest_name].is_a?(Conjunction)
-              modules[dest_name].most_recent_pulse[sender_name] = :low
+              modules[dest_name].attach_input(sender_name)
             end
           end
       end
@@ -105,22 +133,22 @@ class PulsePropagation
 
   # @example first_example
   #   p = PulsePropagation.new(Day20::EXAMPLE_INPUT)
-  #   p.debug = true
-  #   p.push_the_button(1)[:pulses].join("\n")+"\n" #=> Day20::EXAMPLE_ONE_PUSH
+  #   wiretap = ""
+  #   p.push_the_button {|message| wiretap += "#{message[:sender]} -#{message[:pulse]}-> #{message[:destination]}\n"}
+  #   wiretap #=> Day20::EXAMPLE_ONE_PUSH
   # @example more_interesting
   #   p = PulsePropagation.new(Day20::MORE_INTERESTING_EXAMPLE_INPUT)
-  #   p.debug = true
-  #   p.push_the_button(1)[:pulses].join("\n")+"\n" #=> Day20::MORE_INTERESTING_ONE_PUSH
+  #   wiretap = ""
+  #   p.push_the_button {|message| wiretap += "#{message[:sender]} -#{message[:pulse]}-> #{message[:destination]}\n"}
+  #   wiretap #=> Day20::MORE_INTERESTING_ONE_PUSH
   def push_the_button(push_count=1)
     button = Button.new
-    wiretap = {counts: {low: 0, high: 0}, pulses: []}
 
     push_count.times do
       queue = []
       button.push(queue)
       while message = queue.shift do
-        wiretap[:counts][message[:pulse]] += 1
-        wiretap[:pulses] << trace_message(message) if debug
+        yield message if block_given?
 
         receiver = @modules[message[:destination]]
         if receiver
@@ -128,14 +156,7 @@ class PulsePropagation
         end
       end
     end
-
-    wiretap
   end
-
-  def trace_message(message)
-    "#{message[:sender]} -#{message[:pulse]}-> #{message[:destination]}"
-  end
-
 
   class Modyule
     attr_reader :name, :destinations
@@ -194,14 +215,15 @@ class PulsePropagation
       raise("pulse should be :high or :low. what the heck is #{pulse.inspect}?") unless pulse == :low
 
       # However, if a flip-flop module receives a low pulse, it flips between on and off.
-      # If it was off, it turns on and sends a high pulse.
-      if @state == :off
+      case @state
+      when :off            # If it was off, it turns on and sends a high pulse.
         @state = :on
         send_pulse = :high
-      else
-      # If it was on, it turns off and sends a low pulse.
+      when :on             # If it was on, it turns off and sends a low pulse.
         @state = :off
         send_pulse = :low
+      else
+        raise("Unknown state #{@state.inspect} for #{self.class} #{self.name}")
       end
 
       send(send_pulse, queue)
@@ -214,17 +236,25 @@ class PulsePropagation
   # updates its memory for that input. Then, if it remembers high pulses for all inputs,
   # it sends a low pulse; otherwise, it sends a high pulse.
   class Conjunction < Modyule
-    attr_reader :most_recent_pulse
+    attr_reader :inputs
 
     def initialize(name, destination_modules)
       super(name, destination_modules)
-      @most_recent_pulse = Hash.new
+      @inputs = Hash.new
+    end
+
+    def attach_input(module_name)
+      @inputs[module_name] ||= :low
+    end
+
+    def high_pulses_for_all_inputs?
+      @inputs.values.all?(:high)
     end
 
     def receive(sender, pulse, queue)
-      @most_recent_pulse[sender] = pulse
+      @inputs[sender] = pulse
 
-      send_pulse = @most_recent_pulse.values.all?(:high) ? :low : :high
+      send_pulse = high_pulses_for_all_inputs? ? :low : :high
 
       send(send_pulse, queue)
     end

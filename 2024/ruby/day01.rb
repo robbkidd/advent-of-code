@@ -19,12 +19,11 @@ class Day01 < Day # >
   def part2
     left, right = parsed_input
 
-    similarity_score_increases = Hash.new do |hash, key|
-      hash[key] = key * right.count(key)
-    end
+    num_appearances_in_right_list = right.tally
+    num_appearances_in_right_list.default = 0
 
     left
-      .map {|key| similarity_score_increases[key] }
+      .map {|left_num| left_num * num_appearances_in_right_list[left_num] }
       .reduce(&:+)
   end
 

@@ -1,0 +1,44 @@
+require 'erb'
+require 'yard/doctest/rake'
+require_relative 'day'
+
+task :default => :test
+
+task :run do |t, args|
+  puts "OK. Let's run #{WhichDay.klass_name}!\n\n"
+  require "./#{WhichDay.klass_name}"
+  WhichDay.klass.go
+end
+
+desc "Run the tests my way; set env var DAY to run a day other than today"
+task :test do |t, args|
+  puts "Wooo! Let's test #{WhichDay.klass_name}!\n\n"
+  Rake::Task["yard:doctest"].invoke
+end
+
+YARD::Doctest::RakeTask.new do |task|
+  task.doctest_opts = %w[-v] << ENV.fetch("TESTOPTS", "").split(" ")
+  task.pattern = "./#{WhichDay.klass_name.downcase}.rb"
+end
+
+task :new do
+  Rake::Task[WhichDay.klass_name.downcase].invoke
+end
+
+rule ( /^day\d\d$/ ) do |task|
+  output_file = "./#{task.name}.rb"
+  if File.exist?(output_file)
+    puts "🛑 No. I'm protecting you from yourself. That file already exists."
+  else
+    puts "🎶 bring on the newwww daaaaay 🎶"
+    File.write(
+      output_file,
+      ERB.new(File.read('./template.rb.erb'))
+         .result_with_hash(day_klass_name: WhichDay.klass_name)
+    )
+    input_file = WhichDay.input_filename
+    system("pbpaste > #{input_file}")
+    puts "📝 wrote the clipboard to #{input_file}, hope it was right:"
+    system("head -n 5 #{input_file}")
+  end
+end

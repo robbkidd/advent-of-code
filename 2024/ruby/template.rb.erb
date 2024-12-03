@@ -12,6 +12,6 @@ class <%= day_klass_name %> < Day # >
   def part2
   end
 
-  EXAMPLE_INPUT = <<~INPUT
-  INPUT
+  EXAMPLE_INPUT = File.read("../inputs/<%= day_klass_name.downcase %>-example-input.txt")
+  EXAMPLE_INPUT_PART2 = File.read("../inputs/<%= day_klass_name.downcase %>-example-part2-input.txt")
 end

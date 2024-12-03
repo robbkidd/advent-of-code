@@ -29,11 +29,6 @@ class Day03 < Day # >
       .fetch(:sum) # from each_with_object state hash
   end
 
-  EXAMPLE_INPUT = <<~INPUT
-    xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))
-  INPUT
-
-  EXAMPLE_INPUT_PART2 = <<~PART2
-    xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))
-  PART2
+  EXAMPLE_INPUT = File.read("../inputs/day03-example-input.txt")
+  EXAMPLE_INPUT_PART2 = File.read("../inputs/day03-example-part2-input.txt")
 end

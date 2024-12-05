@@ -14,7 +14,8 @@ GEM
     language_server-protocol (3.17.0.3)
     logger (1.6.2)
     method_source (1.1.0)
-    minitest (5.25.2)
+    minitest (5.25.1)
+    mutex_m (0.3.0)
     prism (1.2.0)
     pry (0.15.0)
       coderay (~> 1.1)
@@ -60,6 +61,8 @@ PLATFORMS
 
 DEPENDENCIES
   debug
+  minitest (= 5.25.1)
+  mutex_m
   pry
   rake
   rspec

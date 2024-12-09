@@ -11,14 +11,14 @@ class Day07 < Day # >
       .map { |nums| [ nums[0] , nums[1..-1] ] }
       .select { |test_value, operands|
         operator_combos = [:+, :*].repeated_permutation(operands.length - 1)
-        operator_combos.map { |combo|
-          combo
-            .each_with_index
-            .reduce(operands[0]) { |result, (op, idx)|
-              result = [ result, operands[idx+1] ].reduce(op)
-            }
+        operator_combos.find { |combo|
+          test_value ==
+            combo
+              .each_with_index
+              .reduce(operands[0]) { |result, (op, idx)|
+                result = [ result, operands[idx+1] ].reduce(op)
+              }
         }
-        .any? { |result| result == test_value }
       }
       .map { |test_value, _| test_value }
       .reduce(&:+)
@@ -33,14 +33,14 @@ class Day07 < Day # >
       .map { |nums| [ nums[0] , nums[1..-1] ] }
       .select { |test_value, operands|
         operator_combos = [:+, :*, :concat].repeated_permutation(operands.length - 1)
-        operator_combos.map { |combo|
-          combo
-            .each_with_index
-            .reduce(operands[0]) { |result, (op, idx)|
-              result = [ result, operands[idx+1] ].reduce(op)
-            }
+        operator_combos.find { |combo|
+          test_value ==
+            combo
+              .each_with_index
+              .reduce(operands[0]) { |result, (op, idx)|
+                result = [ result, operands[idx+1] ].reduce(op)
+              }
         }
-        .any? { |result| result == test_value }
       }
       .map { |test_value, _| test_value }
       .reduce(&:+)

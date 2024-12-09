@@ -1,24 +1,31 @@
 require_relative 'day'
 
 class Day07 < Day # >
+  def initialize(*args)
+    super
+    @equations =
+      input
+        .split("\n")
+        .map { |line| line.scan(/\d+/).map(&:to_i) }
+        .map { |nums| [ nums[0] , nums[1..-1] ] }
+  end
 
   # @example
   #   day.part1 #=> 3749
   def part1
-    input
-      .split("\n")
-      .map { |line| line.scan(/\d+/).map(&:to_i) }
-      .map { |nums| [ nums[0] , nums[1..-1] ] }
+    operators = [:+, :*]
+    @equations
       .select { |test_value, operands|
-        operator_combos = [:+, :*].repeated_permutation(operands.length - 1)
-        operator_combos.find { |combo|
-          test_value ==
-            combo
-              .each_with_index
-              .reduce(operands[0]) { |result, (op, idx)|
-                result = [ result, operands[idx+1] ].reduce(op)
-              }
-        }
+        operators
+          .repeated_permutation(operands.length - 1)
+          .find { |combo|
+            test_value ==
+              combo
+                .each_with_index
+                .reduce(operands[0]) { |result, (op, idx)|
+                  result = [ result, operands[idx+1] ].reduce(op)
+                }
+          }
       }
       .map { |test_value, _| test_value }
       .reduce(&:+)
@@ -27,20 +34,19 @@ class Day07 < Day # >
   # @example
   #   day.part2 #=> 11387
   def part2
-    input
-      .split("\n")
-      .map { |line| line.scan(/\d+/).map(&:to_i) }
-      .map { |nums| [ nums[0] , nums[1..-1] ] }
+    operators = [:+, :*, :concat]
+    @equations
       .select { |test_value, operands|
-        operator_combos = [:+, :*, :concat].repeated_permutation(operands.length - 1)
-        operator_combos.find { |combo|
-          test_value ==
-            combo
-              .each_with_index
-              .reduce(operands[0]) { |result, (op, idx)|
-                result = [ result, operands[idx+1] ].reduce(op)
-              }
-        }
+        operators
+          .repeated_permutation(operands.length - 1)
+          .find { |combo|
+            test_value ==
+              combo
+                .each_with_index
+                .reduce(operands[0]) { |result, (op, idx)|
+                  result = [ result, operands[idx+1] ].reduce(op)
+                }
+          }
       }
       .map { |test_value, _| test_value }
       .reduce(&:+)

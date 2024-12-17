@@ -4,12 +4,15 @@ source "https://rubygems.org"
 
 git_source(:github) { |repo_name| "https://github.com/#{repo_name}" }
 
+gem "priority_queue_cxx"
+gem "parallel"
+gem "matrix"
+
 gem "rake"
 gem "pry"
 gem "minitest", "= 5.25.1" # 5.25.2 causes yard-doctest's anon class to appear in test names :(
 gem "yard-doctest"
 gem "mutex_m" # yard-doctest uses this, but it'll be yoinked from default gems in Ruby 3.4
 gem "rspec"
-
 gem "debug"
-gem "ruby-lsp", group: :development
+gem "ruby-lsp"

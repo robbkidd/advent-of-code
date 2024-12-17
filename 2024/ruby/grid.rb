@@ -1,47 +1,27 @@
+require 'fc' # FastContainers::PriorityQueue
+
 class Grid
   include Enumerable
 
   attr_reader :row_bounds, :column_bounds
-  attr_accessor :raise_on_out_of_bounds
 
-  class OutOfBounds < RuntimeError ; end
-
-  def initialize(input, raise_on_out_of_bounds: true)
+  def initialize(input)
     @input = input
-    @raise_on_out_of_bounds = raise_on_out_of_bounds
-    @the_grid = Hash.new { |(r, c)| raise "No data parsed." }
+    case input
+    when String
+      @the_grid = Hash.new { |(r, c)| raise "No data parsed." }
+    when Hash
+      @the_grid = input
+      @the_grid.default_proc = DEFAULT_VALUE_PROC
+      compute_bounds
+    else
+      raise "New grids can only be from Strings to parse or a prefilled Hash."
+    end
   end
 
-  def each
-    @the_grid.each { |coords, value| yield coords, value }
-  end
-
-  # @example
-  #   grid = new("")
-  #   grid.at([0,0])       #=> raise("No data loaded.")
-  #   grid.set([0,0], ".")
-  #   grid.at([0,0])      #=> "."
-  def set(coords, value)
-    @the_grid[coords] = value
-  end
-
-  # @example
-  #   grid = new("S..\n.\n..")
-  #   grid.at([0,0])       #=> raise "No data parsed."
-  #   grid.parse
-  #   grid.at([0,0])       #=> "S"
-  #   grid.at([-100,-100]) #=> raise KeyError, "Coordinates not found on grid: [-100, -100]"
-  def at(coords)
-    (@value_transform_proc || DEFAULT_VALUE_TRANFORM_PROC).call(
-      @the_grid[coords]
-    )
-  end
+  DEFAULT_VALUE_PROC = proc { |_hash, key| :out_of_bounds }
 
   DEFAULT_VALUE_TRANFORM_PROC = proc { |v| v }
-
-  def values_are_integers
-    set_value_transform_proc { |v| v.to_i }
-  end
 
   def set_value_transform_proc(&block)
     raise "#{__method__} must be called with a block." unless block_given?
@@ -50,10 +30,85 @@ class Grid
     self
   end
 
+  def values_are_integers
+    set_value_transform_proc { |v| v.to_i }
+
+    self
+  end
+
+  ### Parsing
+
+  def parse
+    split_input =
+      case @input
+      when Array # assume the lines and chars have been split already
+        @input
+      when String
+        @input
+          .split("\n")
+          .map { |line| line.chars }
+      else
+        raise("don't know how to parse #{input.inspect}")
+      end
+
+    split_input
+      .each_with_index do |row, r|
+        row.each_with_index do |char, c|
+          @the_grid[[r, c]] = char
+          yield [r, c], char if block_given?
+        end
+      end
+
+    @the_grid.default_proc = DEFAULT_VALUE_PROC
+
+    compute_bounds
+
+    self
+  end
+
+  def compute_bounds
+    @row_bounds, @column_bounds =
+      @the_grid.keys.transpose.map { |dimension| Range.new(*dimension.minmax) }
+
+    self
+  end
+
+  def set_grid(a_grid)
+    raise "A grid's gotta be a Hash" unless a_grid.is_a? Hash
+    raise "Grid keys gotta be 2-element Arrays" unless a_grid.keys.all? { |key|
+      key.is_a?(Array) && key.size == 2
+    }
+
+    @the_grid = a_grid
+    @the_grid.default_proc = DEFAULT_VALUE_PROC
+    compute_bounds
+    self
+  end
+
+  ### Getting and Setting
+
+  def set(coords, value)
+    @the_grid[coords] = value
+  end
+
+  def at(coords)
+    (@value_transform_proc || DEFAULT_VALUE_TRANFORM_PROC).call(
+      @the_grid[coords.to_a]
+    )
+  end
+
   def cover?(coords)
     raise "No data loaded." unless (@row_bounds && @column_bounds)
-    @row_bounds.cover?(coords[0]) && @column_bounds.cover?(coords[1])
+    at(coords) != :out_of_bounds
   end
+
+  ### Enumerating
+
+  def each
+    @the_grid.each { |coords, value| yield coords, value }
+  end
+
+  ### Neigbors & Pathing
 
   def manhattan_distance(here, there)
     [here, there].transpose.map { |a, b| (a - b).abs }.reduce(&:+)
@@ -67,22 +122,14 @@ class Grid
     [0, 1] => ">" # right a column
   }
 
-  # @example exception when grid hasn't been populated
-  #   grid = new(Day12::EXAMPLE_INPUT)
-  #   grid.neighbors_for([2,5]) #=> raise "No data loaded."
-  #
-  # @example in bounds
-  #   grid = new(Day12::EXAMPLE_INPUT).parse
-  #   grid.neighbors_for([2,5]) #=> [ [1,5], [3,5], [2,4], [2,6] ]
-  #
-  # @example on the edge
-  #   grid = new(Day12::EXAMPLE_INPUT).parse
-  #   grid.neighbors_for([0,0]) #=> [ [1,0], [0,1] ]
   def neighbors_for(coords)
     OFFSET_TO_DIRECTION
       .keys
-      .map { |offset| coords.zip(offset).map { |p| p.reduce(&:+) } }
-      .select { |neighbor_coords| self.cover? neighbor_coords }
+      .map { |offset|
+        [ offset, coords.zip(offset).map { |p| p.reduce(&:+) } ]
+      }
+      .select { |_direction, neighbor_coords| self.cover? neighbor_coords }
+      .to_h
   end
 
   # default cost to step to a neighbor
@@ -123,7 +170,7 @@ class Grid
       check_pos = survey_queue.pop
       break if check_pos == goal
 
-      neighbors_for(check_pos).each do |neighbor|
+      neighbors_for(check_pos).each do |_direction, neighbor|
         neighbor_cost =
           costs[check_pos] + cost_calculator.call(self, check_pos, neighbor)
 
@@ -170,69 +217,9 @@ class Grid
     direction_of_travel_from
   end
 
-  # @example
-  #
-  def parse
-    split_input =
-      case @input
-      when Array # assume the lines and chars have been split already
-        @input
-      when String
-        @input
-          .split("\n")
-          .map { |line| line.chars }
-      else
-        raise("don't know how to parse #{input.inspect}")
-      end
 
-    split_input
-      .each_with_index do |row, r|
-        row.each_with_index do |char, c|
-          @the_grid[[r, c]] = char
-          yield [r, c], char if block_given?
-        end
-      end
+  ### Display
 
-    @the_grid.default_proc =
-      proc do |_hash, key|
-        if @raise_on_out_of_bounds
-          raise OutOfBounds, "Coordinates not found on grid: #{key}"
-        else
-          :out_of_bounds
-        end
-      end
-
-    @row_bounds, @column_bounds =
-      @the_grid.keys.transpose.map { |dimension| Range.new(*dimension.minmax) }
-
-    self
-  end
-
-  # @example by default, stringifies input value for a grid location
-  #   grid = new("abcd\nefgh\n").parse
-  #   grid.to_s  #=> "abcd\nefgh\n"
-  #
-  # @example transforms with an assigned to_s_proc
-  #   grid = new("abcd\nefgh\n").parse
-  #   grid.to_s  #=> "abcd\nefgh\n"
-  #   grid.to_s_proc = proc {|_coords, value| (value.ord + 1).chr }
-  #   grid.to_s  #=> "bcde\nfghi\n"
-  #   grid.to_s_proc = nil
-  #   grid.to_s  #=> "abcd\nefgh\n"
-  #
-  # @example transforms with a given block
-  #   grid = new("abcd\nefgh\n").parse
-  #   grid.to_s  #=> "abcd\nefgh\n"
-  #   grid.to_s { |_coords, value| (value.ord + 1).chr } #=> "bcde\nfghi\n"
-  #   grid.to_s  #=> "abcd\nefgh\n"
-  #
-  # @example block given takes priority over assigned to_s_proc
-  #   grid = new("abcd\nefgh\n").parse
-  #   grid.to_s  #=> "abcd\nefgh\n"
-  #   grid.to_s_proc = proc {|_, _| raise "to_s_proc called" }
-  #   grid.to_s  #=> raise "to_s_proc called"
-  #   grid.to_s { |_coords, value| (value.ord + 1).chr } #=> "bcde\nfghi\n"
-  #
   attr_writer :to_s_proc
   DEFAULT_TO_S_PROC = proc { |_coords, value| value.to_s }
   def to_s(&block)

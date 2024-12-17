@@ -8,7 +8,7 @@ class Day04 < Day # >
   def part1
     exes = []
     word_search =
-      Grid.new(input, raise_on_out_of_bounds: false)
+      Grid.new(input)
         .parse do |coords, char|
           exes << coords if char == 'X'
         end
@@ -41,13 +41,18 @@ class Day04 < Day # >
           ays << coords if char == 'A'
         end
 
+    expected = Set.new(["M", "S"])
     ays
       .keep_if { |a_location|
         begin
-          ["M", "S"] == [ word_search.at(step_in_direction(a_location, [-1,-1])),
-                          word_search.at(step_in_direction(a_location, [ 1, 1])) ].sort &&
-            ["M", "S"] == [ word_search.at(step_in_direction(a_location, [-1, 1])),
-                            word_search.at(step_in_direction(a_location, [ 1,-1])) ].sort
+          expected == Set.new(
+                        [ word_search.at(step_in_direction(a_location, [-1,-1])),
+                          word_search.at(step_in_direction(a_location, [ 1, 1])) ]
+                      ) &&
+          expected == Set.new(
+                        [ word_search.at(step_in_direction(a_location, [-1, 1])),
+                          word_search.at(step_in_direction(a_location, [ 1,-1])) ]
+                      )
         rescue Grid::OutOfBounds
           false
         end

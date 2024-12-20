@@ -6,6 +6,7 @@ git_source(:github) { |repo_name| "https://github.com/#{repo_name}" }
 
 gem "priority_queue_cxx"
 gem "parallel"
+gem "ruby-progressbar"
 gem "matrix"
 
 gem "rake"

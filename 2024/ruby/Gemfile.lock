@@ -51,6 +51,7 @@ GEM
       prism (>= 1.2, < 2.0)
       rbs (>= 3, < 4)
       sorbet-runtime (>= 0.5.10782)
+    ruby-progressbar (1.13.0)
     sorbet-runtime (0.5.11670)
     stringio (3.1.2)
     yard (0.9.37)
@@ -73,6 +74,7 @@ DEPENDENCIES
   rake
   rspec
   ruby-lsp
+  ruby-progressbar
   yard-doctest
 
 BUNDLED WITH

@@ -19,22 +19,25 @@ class Day24 < Day # >
           known_wires[wire] = signal.to_i
         when /-\>/
           input1, gate, input2, wire = line.scan(/\w+/)
-          to_be_determined[wire] = { inputs: [input1, input2], gate: gate }
+          op = case gate
+                when 'AND' ; :&
+                when 'OR'  ; :|
+                when 'XOR' ; :^
+                else ; raise "lolwut: unknown gate #{gate}"
+                end
+          to_be_determined[wire] = {
+            inputs: [input1, input2],
+            proc: -> { [input1, input2].map { known_wires[_1] }.reduce(&op) }
+          }
         end
       end
 
     while to_be_determined.keys.any? {|wire| wire.start_with?('z') } do
       puts to_be_determined.keys.inspect if ENV['DEBUG']
       to_be_determined
-        .select {|wire, data| data[:inputs].all? {|input| known_wires.keys.include?(input) } }
-        .each do |wire, data|
-          known_wires[wire] =
-            case data[:gate]
-            when 'AND' ; known_wires[data[:inputs][0]] & known_wires[data[:inputs][1]]
-            when 'OR'  ; known_wires[data[:inputs][0]] | known_wires[data[:inputs][1]]
-            when 'XOR' ; known_wires[data[:inputs][0]] ^ known_wires[data[:inputs][1]]
-            else ; raise "lolwut: unknown gate #{data[:gate]}"
-            end
+        .select {|wire, gate| gate[:inputs].all? { known_wires.key?(_1) } }
+        .each do |wire, gate|
+          known_wires[wire] = gate[:proc].call
           to_be_determined.delete(wire)
         end
     end

@@ -35,18 +35,18 @@ class Day24 < Day # >
     while to_be_determined.keys.any? {|wire| wire.start_with?('z') } do
       puts to_be_determined.keys.inspect if ENV['DEBUG']
       to_be_determined
-        .select {|wire, gate| gate[:inputs].all? { known_wires.key?(_1) } }
-        .each do |wire, gate|
-          known_wires[wire] = gate[:proc].call
-          to_be_determined.delete(wire)
+        .select {|_wire, gate| gate[:inputs].all? { known_wires.key?(_1) } }
+        .each do |computable_wire, gate|
+          known_wires[computable_wire] = gate[:proc].call
+          to_be_determined.delete(computable_wire)
         end
     end
 
     known_wires
-      .select {|wire, signal| wire.start_with?('z') }
-      .sort_by {|wire, signal| wire }
+      .select {|wire, _signal| wire.start_with?('z') }
+      .sort_by {|z_wire, _signal| z_wire }
       .reverse
-      .map {|wire, signal| signal.to_s }
+      .map {|_z_wire_significantly_ordered, signal| signal.to_s }
       .join
       .to_i(2)
   end

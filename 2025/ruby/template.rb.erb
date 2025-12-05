@@ -1,0 +1,16 @@
+require_relative 'day'
+
+class <%= day_klass_name %> < Day # >
+
+  # @example
+  #   day.part1 #=> 'hey'
+  def part1
+  end
+
+  # @example
+  #   day.part2 #=> 'how are you'
+  def part2
+  end
+
+  EXAMPLE_INPUT = File.read("../inputs/<%= day_klass_name.downcase %>-example-input.txt")
+end

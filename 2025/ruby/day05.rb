@@ -1,5 +1,20 @@
 require_relative 'day'
 
+class Range
+  # Patch the monkeys! Muahaha!
+  #
+  # @example 10-14, 12-18
+  #   (10..14).combine (12..18) #=> (10..18)
+  # @example 12-18, 16-20
+  #   (16..20).combine (12..18) #=> (12..20)
+  # @example 0..1, 8..9
+  #   (0..1).combine (8..9) #=> raise RuntimeError, "Can't combine ranges that don't overlap: 0..1, 8..9"
+  def combine(other)
+    raise "Can't combine ranges that don't overlap: #{self}, #{other}" if !self.overlap?(other)
+    Range.new([self.min, other.min].min, [self.max, other.max].max)
+  end
+end
+
 class Day05 < Day # >
   attr_reader :ranges, :ids
 
@@ -32,21 +47,13 @@ class Day05 < Day # >
       .sort_by { _1.min }
       .each_with_object([]) { |input_range, unique_ranges|
         if hit = unique_ranges.find_index { |uniq| uniq.overlap? input_range }
-          unique_ranges[hit] = combine_ranges(unique_ranges[hit], input_range)
+          unique_ranges[hit] = unique_ranges[hit].combine input_range
         else
           unique_ranges << input_range
         end
       }
       .map(&:count)
       .reduce(&:+)
-  end
-
-  # @example 10-14, 12-18
-  #   day.combine_ranges((10..14), (12..18)) #=> (10..18)
-  # @example 12-18, 16-20
-  #   day.combine_ranges((16..20), (12..18)) #=> (12..20)
-  def combine_ranges(a,b)
-    Range.new([a.min, b.min].min, [a.max, b.max].max)
   end
 
   EXAMPLE_INPUT = File.read("../inputs/day05-example-input.txt")

@@ -26,16 +26,13 @@ end
 class TachyonManifold < Grid
   include UglySweater
 
-  attr_reader :entrance, :splitter_coords, :splitters_by_row, :beams_by_row
-
-  def self.example
-    new(Day07::EXAMPLE_INPUT).parse
-  end
+  attr_reader :entrance, :splitter_coords
 
   def initialize(input=nil)
     super
     @entrance = nil
     @splitter_coords = Set.new
+    @beam_density = Hash.new { 0 }
   end
 
   # @example
@@ -43,8 +40,6 @@ class TachyonManifold < Grid
   #   tachmani.parse
   #   tachmani.entrance #=> [0,7]
   #   tachmani.splitter_coords #=> Set[[2, 7], [4, 6], [4, 8], [6, 5], [6, 7], [6, 9], [8, 4], [8, 6], [8, 10], [10, 3], [10, 5], [10, 9], [10, 11], [12, 2], [12, 6], [12, 12], [14, 1], [14, 3], [14, 5], [14, 7], [14, 9], [14, 13]]
-  #   tachmani.splitters_by_row[4] #=> Set[6,8]
-  #   tachmani.beams_by_row[0] #=> Set[7]
   def parse
     super { |coord, char|
       case char
@@ -53,47 +48,41 @@ class TachyonManifold < Grid
       else ; # keep calm and parse on
       end
     }
-
-    @beams_by_row = Array.new(@row_bounds.count) { Set.new }
-    @beams_by_row[@entrance[0]] << @entrance[1]
-
-    @beam_density = Hash.new { 0 }
-    @beam_density[@entrance] += 1
-
-    @splitters_by_row = Array.new(@row_bounds.count) { Set.new }
-    @splitter_coords.each { |(r,c)|
-      @splitters_by_row[r] << c
-    }
-
-    @beam_splits = 0
-
-    self
   end
 
   def track_beam
-    @row_bounds.to_a[1..].each { |r|
-      @beams_by_row[r-1].each { |c|
-        if @splitters_by_row[r].include?(c)
-          @beams_by_row[r] << c-1
-          @beams_by_row[r] << c+1
-          @beam_splits += 1
-          @beam_density[[r,c-1]] += @beam_density[[r-1,c]]
-          @beam_density[[r,c+1]] += @beam_density[[r-1,c]]
-        else
-          @beams_by_row[r] << c
-          @beam_density[[r,c]] += @beam_density[[r-1,c]]
-        end
-      }
-    }
+    @beam_density[@entrance] += 1
+
+    @row_bounds
+      .each do |row|
+        next if row == @row_bounds.min # skip first row, that's where the beam enters
+
+        @beam_density
+          .select {|(beam_row, _), _| beam_row == row-1 } # beams from above
+          .each do |(_, beam_col), density|
+            if @splitter_coords.include?([row, beam_col])
+              @beam_density[[row,beam_col-1]] += density
+              @beam_density[[row,beam_col+1]] += density
+            else
+              @beam_density[[row,beam_col]] += density
+            end
+          end
+    end
   end
 
   def beam_splits
-    @beam_splits
+    @splitter_coords
+      .select { |(r,c)|
+        @beam_density[[r-1,c]] > 0 # look above every splitter for beaminess
+      }
+      .count
   end
 
   def timeline_splits
     @beam_density
-      .filter_map {|(r,c), density| density if r == @row_bounds.max }
+      .filter_map {|(r,c), density|
+        density if r == @row_bounds.max # beam densities on manifold exit
+      }
       .reduce(&:+)
   end
 
@@ -107,5 +96,4 @@ class TachyonManifold < Grid
       end
     }
   end
-
 end
